@@ -352,7 +352,9 @@ input:checked+.tslider:before{transform:translateX(18px)}
         <div class="field"><div class="flabel">מחיר רכישה <span class="flabel-en">Purchase Price</span></div><div class="iw"><span class="sym sym-l">$</span><input type="number" class="sl" id="d-purchase" value="0" oninput="calcAll()"></div></div>
         <div class="field"><div class="flabel">עלויות שיפוץ <span class="flabel-en">Renovation</span></div><div class="iw"><span class="sym sym-l">$</span><input type="number" class="sl" id="d-reno" value="0" oninput="calcAll()"></div></div>
         <div class="field"><div class="flabel">ARV <span class="flabel-en">After Repair Value</span></div><div class="iw"><span class="sym sym-l">$</span><input type="number" class="sl" id="d-arv" value="0" oninput="calcAll()"></div></div>
-        <div class="field narrow"><div class="flabel">משך (חודשים) <span class="flabel-en">Duration</span></div><input type="number" id="d-months" value="0" oninput="calcAll()"></div>
+        <div class="field narrow"><div class="flabel">חודשי שיפוץ <span class="flabel-en">Rehab Months</span></div><input type="number" id="d-rehab-months" value="0" oninput="calcAll()"></div>
+      <div>
+        <div class="flabel">חודשי שיווק <span class="flabel-en">Marketing Months</span></div><input type="number" id="d-market-months" value="0" oninput="calcAll()"></div
       </div>
     </div>
 
@@ -948,9 +950,9 @@ function getDealData() {
   const loanPurchase = purchase * ltcPct;                    // הלוואת רכישה
   const loanRehab = reno * rehabLtcPct;                      // הלוואת שיפוץ (holdback)
   const totalLoan = loanPurchase + loanRehab;                // סה"כ הלוואה
-  const origFee = loanPurchase * origPct;                    // origination על הלוואת רכישה בלבד
+  const origFee = totalLoan * origPct;                    // origination על הלוואת רכישה בלבד
   const interestPurchase = loanPurchase * annRate * (months/12);
-  const rehabInterest = loanRehab * drawFactor * annRate * (months/12); // ריבית על חלק שנמשך
+  const rehabInterest = loanRehab * drawFactor * annRate * (rehabMonths/12) + loanRehab * annRate * (marketMonths/12); // ריבית על חלק שנמשך
   const drawCosts = drawFee * drawCount;
   const totalFinanceCosts = interestPurchase + rehabInterest + origFee + serviceFee + drawCosts + lendaiExtras;
 
@@ -1061,7 +1063,7 @@ function calcAll() { markDirty(); updateContHint(); calcFlip(); calcRental(); }
 // ─── FLIP CALC ───
 function calcFlip() {
   const d = getDealData();
-  const {purchase,reno,arv,months,totalCost,closingCosts,holdingCosts,totalFinanceCosts,totalExpFlip,
+  const {purchase,reno,arv,months,rehabMonths,marketMonths,totalCost,closingCosts,holdingCosts,totalFinanceCosts,totalExpFlip,
     lenderOn,loanPurchase,loanRehab,totalLoan,loanRepay,interestPurchase,rehabInterest,origFee,serviceFee,drawCosts,
     equityAmt,gratAmt,invAmt,gratEqPct,invEqPct,gratProfitPct,invProfitPct,debtRate,
     commissionAmt,titleAmt,legal,contingency,extraExpTotal,taxMo,insuranceMo,lendaiExtras,mgmtCostFlip} = d;
@@ -1534,7 +1536,7 @@ function saveDeal() {
     notesFlip: $('notes-flip').value || '',
     notesRental: $('notes-rental').value || '',
     inputs: {
-      purchase: v('d-purchase'), reno: v('d-reno'), arv: v('d-arv'), months: v('d-months'),
+      purchase: v('d-purchase'), reno: v('d-reno'), arv: v('d-arv'), months: (v('d-rehab-months')||0) + (v('d-market-months')||0), rehabMonths: v('d-rehab-months')||0, marketMonths: v('d-market-months')||0,
       commission: v('d-commission'), title: v('d-title'), legal: v('d-legal'), llc: v('d-llc'), contingency: v('d-contingency'),
       tax: v('d-tax'), insurance: v('d-insurance'),
       lender: currentLender, ltc: v('l-ltc'), rehabLtc: v('l-rehab-ltc'), rate: v('l-rate'), orig: v('l-orig'),
