@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GRAT Holdings — סימולטור פנימי v7</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F1EA;
+  --surface:#FFFFFF;
+  --surface2:#EDEAE2;
+  --border:rgba(26,39,68,0.10);
+  --border-strong:rgba(26,39,68,0.18);
+  --text:#1A2744;
+  --text-muted:#4A5568;
+  --text-hint:#8A9AB5;
+  --navy:#1A2744;
+  --gold:#C8973A;
+  --gold-light:#F5E8CC;
+  --green:#1A5C2E;
+  --green-bg:#E6F2E9;
+  --red:#8B1A1A;
+  --red-bg:#F5E6E6;
+  --lender:#1A7A5E;
+  --charcoal:#36454F;
+  --radius:10px;
+  --radius-lg:16px;
+}
+body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:1.5rem 1rem;font-size:14px;line-height:1.5}
+.page{max-width:1000px;margin:0 auto}
+
+/* HEADER */
+header{background:var(--navy);border-radius:var(--radius-lg);padding:16px 22px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between}
+.hdr-left .title{font-size:19px;font-weight:800;color:#FFF;letter-spacing:-0.3px}
+.hdr-left .sub{font-size:11px;color:var(--gold);font-style:italic;margin-top:2px}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.internal-badge{background:rgba(200,151,58,0.15);color:var(--gold);font-size:10px;font-weight:600;padding:4px 10px;border-radius:10px;border:1px solid rgba(200,151,58,0.3)}
+.grat-badge{background:var(--gold);color:var(--navy);font-size:12px;font-weight:700;padding:7px 16px;border-radius:20px}
+
+/* MAIN TABS */
+.main-tabs{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto}
+.mtab{flex:1;min-width:120px;padding:11px 8px;text-align:center;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-muted);border:2px solid var(--border-strong);border-radius:var(--radius);background:var(--surface);transition:all .15s;font-family:inherit;white-space:nowrap}
+.mtab.on{background:var(--navy);color:#FFF;border-color:var(--navy)}
+.mtab:hover:not(.on){border-color:var(--navy);color:var(--navy)}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;margin-bottom:12px}
+.card-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px}
+.card-title-en{font-size:10px;font-weight:400;color:var(--text-hint);font-style:italic}
+
+/* SECTION HDR */
+.shdr{font-size:11px;font-weight:700;color:var(--navy);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.shdr-en{font-size:9px;font-weight:400;color:var(--text-hint);font-style:italic}
+
+/* CATEGORY SECTIONS — colored left border */
+.cat-section{border-radius:var(--radius);padding:12px 14px;margin-bottom:10px;border-right:3px solid transparent}
+.cat-section.cat-deal{background:#F0F4FF;border-right-color:#3A5BC7}
+.cat-section.cat-closing{background:#FEF9EC;border-right-color:var(--gold)}
+.cat-section.cat-holding{background:#F0F7F2;border-right-color:var(--green)}
+.cat-section.cat-rental{background:#FFF4ED;border-right-color:#C25A1A}
+.cat-section.cat-mgmt{background:#F5F5F5;border-right-color:#7A7A7A}
+.cat-section.cat-extra{background:#F8F4FF;border-right-color:#7A5AC8}
+.cat-title{font-size:11px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.cat-title-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* COMPACT EXTRA EXPENSE ROW */
+.extra-exp-row{display:flex;gap:6px;margin-bottom:5px;align-items:center}
+.extra-exp-desc{flex:2;padding:5px 8px;font-size:11px;border:1px solid var(--border-strong);border-radius:8px;font-family:inherit;background:#FAFAF8;color:var(--text)}
+.extra-exp-desc:focus{outline:none;border-color:var(--gold)}
+.extra-exp-amt{width:90px;padding:5px 5px 5px 18px;font-size:11px;border:1px solid var(--border-strong);border-radius:8px;font-family:inherit;background:#FAFAF8;direction:ltr;-moz-appearance:textfield}
+.extra-exp-amt::-webkit-outer-spin-button,.extra-exp-amt::-webkit-inner-spin-button{-webkit-appearance:none}
+.extra-exp-amt:focus{outline:none;border-color:var(--gold)}
+.extra-exp-wrap{position:relative}
+.extra-exp-sym{position:absolute;left:6px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--text-hint);pointer-events:none}
+.extra-exp-del{padding:4px 7px;border:1px solid var(--border-strong);border-radius:6px;background:none;cursor:pointer;color:var(--text-hint);font-size:11px;transition:all .15s;flex-shrink:0}
+.extra-exp-del:hover{border-color:var(--red);color:var(--red)}
+.add-expense-btn{font-size:11px;color:var(--text-muted);background:none;border:1px dashed var(--border-strong);border-radius:8px;padding:5px 12px;cursor:pointer;font-family:inherit;transition:all .15s}
+.add-expense-btn:hover{border-color:var(--navy);color:var(--navy)}
+
+/* FIELDS */
+.row{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.field{flex:1;min-width:120px}
+.field.narrow{min-width:90px;max-width:140px}
+.field.wide{min-width:180px}
+.flabel{font-size:11px;color:var(--text-muted);margin-bottom:4px;line-height:1.3}
+.flabel-en{font-size:9px;color:var(--text-hint);font-style:italic;display:block}
+.iw{position:relative}
+.iw .sym{position:absolute;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-hint);pointer-events:none;z-index:1}
+.sym-l{left:8px}
+.sym-r{right:8px}
+input[type=number],input[type=text],select{width:100%;padding:7px 9px;font-size:13px;border:1px solid var(--border-strong);border-radius:var(--radius);font-family:inherit;color:var(--text);background:#FAFAF8;transition:border-color .15s}
+input[type=number]{direction:ltr;text-align:left;-moz-appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+input[type=number]:focus,input[type=text]:focus,select:focus{outline:none;border-color:var(--gold)}
+input.sl{padding-left:22px}
+input.sr{padding-right:22px}
+input.ro{background:var(--surface2);color:var(--text-hint)}
+select{cursor:pointer}
+.divider{height:1px;background:var(--border);margin:12px 0}
+.warn{font-size:11px;color:var(--red);margin-top:3px;display:none}
+.warn.show{display:block}
+
+/* LENDER DROPDOWN */
+.lender-dropdown-wrap{position:relative;margin-bottom:10px}
+.lender-dropdown-btn{width:100%;padding:9px 14px;background:var(--navy);color:#FFF;border:none;border-radius:var(--radius);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-align:right;display:flex;align-items:center;justify-content:space-between}
+.lender-dropdown-btn:hover{background:#253A6A}
+.lender-menu{position:absolute;top:calc(100% + 4px);right:0;left:0;background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius);box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:100;overflow:hidden}
+.lender-menu-item{width:100%;padding:10px 14px;background:none;border:none;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;text-align:right;color:var(--text-muted);display:flex;align-items:center;justify-content:space-between;transition:background .1s}
+.lender-menu-item:hover{background:var(--bg)}
+.lender-menu-item.on{color:var(--navy);background:var(--gold-light)}
+.lender-menu-divider{height:1px;background:var(--border)}
+
+/* MGMT TOGGLE */
+.mgmt-toggle{display:flex;gap:5px;margin-top:5px}
+.mgmt-btn{flex:1;padding:5px 8px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);cursor:pointer;font-family:inherit;font-size:10px;font-weight:600;color:var(--text-muted);transition:all .15s}
+.mgmt-btn.on{background:var(--navy);color:#FFF;border-color:var(--navy)}
+
+/* TOGGLE SWITCH */
+.tog-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:10px}
+.tog-label{font-size:12px;font-weight:600;color:var(--navy);flex:1}
+.tog-label-en{font-size:9px;color:var(--text-hint);font-style:italic;display:block;margin-top:1px}
+.toggle-switch{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.tslider{position:absolute;cursor:pointer;inset:0;background:#CCC;border-radius:22px;transition:.3s}
+.tslider:before{position:absolute;content:"";height:16px;width:16px;left:3px;bottom:3px;background:#FFF;border-radius:50%;transition:.3s}
+input:checked+.tslider{background:var(--navy)}
+input:checked+.tslider:before{transform:translateX(18px)}
+.panel{display:none}
+.panel.open{display:block}
+
+/* MODE SELECTOR */
+.mode-sel{display:flex;gap:6px;margin-bottom:12px}
+.mode-btn{flex:1;padding:9px 8px;border-radius:var(--radius);border:2px solid var(--border-strong);background:var(--surface);cursor:pointer;text-align:center;font-family:inherit;font-size:11px;font-weight:600;color:var(--text-muted);transition:all .15s;line-height:1.4}
+.mode-btn.on{border-color:var(--gold);background:var(--gold-light);color:var(--navy)}
+.mode-btn.on.navy{border-color:var(--navy);background:var(--navy);color:#FFF}
+
+/* AMOUNTS ROW */
+.amts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}
+.amt-box{background:var(--bg);border-radius:var(--radius);padding:10px 12px;border:1px solid var(--border)}
+.amt-label{font-size:10px;color:var(--text-muted);margin-bottom:4px}
+.amt-label-en{font-size:9px;color:var(--text-hint);font-style:italic;display:block}
+.amt-val{font-size:15px;font-weight:700;color:var(--navy)}
+.amt-val.gold{color:var(--gold)}
+.amt-sub{font-size:10px;color:var(--text-hint);margin-top:1px}
+
+/* BAR */
+.bar{height:28px;border-radius:8px;overflow:hidden;display:flex;margin:8px 0}
+.bar-seg{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#FFF;transition:width .3s}
+.bar-legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+.bar-leg-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-muted)}
+.bar-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* WATERFALL */
+.wf-step{display:flex;align-items:flex-start;gap:10px;margin-bottom:7px;padding:10px 12px;background:var(--bg);border-radius:var(--radius);border-right:3px solid var(--border-strong)}
+.wf-step.s-rev{border-right-color:var(--navy)}
+.wf-step.s-lender{border-right-color:var(--lender)}
+.wf-step.s-inv{border-right-color:var(--gold)}
+.wf-step.s-grat{border-right-color:var(--navy)}
+.wf-step.s-profit{border-right-color:var(--green);background:var(--green-bg)}
+.wf-step.s-loss{border-right-color:var(--red);background:var(--red-bg)}
+.wf-num{width:20px;height:20px;border-radius:50%;background:var(--navy);color:#FFF;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.wf-step.s-profit .wf-num{background:var(--green)}
+.wf-step.s-loss .wf-num{background:var(--red)}
+.wf-content{flex:1}
+.wf-label{font-size:11px;font-weight:600;color:var(--navy)}
+.wf-label-en{font-size:9px;color:var(--text-hint);font-style:italic;font-weight:400}
+.wf-detail{font-size:10px;color:var(--text-muted);margin-top:2px;line-height:1.4}
+.wf-amt{font-size:14px;font-weight:700;white-space:nowrap;min-width:80px;text-align:right;direction:ltr}
+.wf-amt.green{color:var(--green)}
+.wf-amt.red{color:var(--red)}
+.wf-amt.gold{color:var(--gold)}
+.wf-arrow{text-align:center;font-size:12px;color:var(--text-hint);margin:-1px 0 1px}
+
+/* RESULTS TABLE */
+.rtable{width:100%;border-collapse:collapse;margin-top:10px;font-size:11px}
+.rtable th{padding:8px 10px;background:var(--navy);color:#FFF;font-weight:600;text-align:center}
+.rtable th:first-child{text-align:right;background:var(--surface2);color:var(--text)}
+.rtable th.gold-hdr{background:var(--gold);color:var(--navy)}
+.rtable th.dark-hdr{background:var(--charcoal);color:#FFF}
+.rtable td{padding:7px 10px;border-bottom:1px solid var(--border);text-align:center}
+.rtable td:first-child{text-align:right;color:var(--text-muted);font-weight:500}
+.rtable tr:last-child td{border-bottom:none}
+.rtable tr.section-row td{background:var(--bg);font-weight:700;color:var(--navy);font-size:10px;padding:5px 10px}
+.rtable .val-green{color:var(--green);font-weight:700}
+.rtable .val-red{color:var(--red);font-weight:700}
+.rtable .val-gold{color:var(--gold);font-weight:700}
+.rtable .val-bold{font-weight:700;color:var(--navy)}
+
+/* NOI TABLE */
+.noi-tbl{width:100%;border-collapse:collapse;font-size:11px;margin-top:6px}
+.noi-tbl td{padding:4px 8px;border-bottom:1px solid var(--border)}
+.noi-tbl td:last-child{text-align:left;direction:ltr;font-weight:600}
+.noi-tbl tr.noi-total td{font-weight:700;font-size:12px;border-top:2px solid var(--border);border-bottom:none}
+
+/* COMPARE */
+.cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.cmp-box{background:var(--bg);border-radius:var(--radius);padding:12px;border:2px solid var(--border)}
+.cmp-box.debt{border-color:var(--charcoal)}
+.cmp-box.jv{border-color:var(--gold)}
+.cmp-title{font-size:11px;font-weight:700;margin-bottom:10px}
+.cmp-box.debt .cmp-title{color:var(--charcoal)}
+.cmp-box.jv .cmp-title{color:var(--gold)}
+.cmp-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px}
+.cmp-row:last-child{border-bottom:none}
+.cmp-lbl{color:var(--text-muted)}
+.cmp-val{font-weight:700}
+.cmp-val.green{color:var(--green)}
+.cmp-val.gold{color:var(--gold)}
+.cmp-val.red{color:var(--red)}
+.cmp-foot{background:var(--navy);border-radius:7px;padding:7px 10px;margin-top:8px;display:flex;justify-content:space-between;align-items:center}
+.cmp-foot-lbl{font-size:10px;color:rgba(255,255,255,0.7)}
+.cmp-foot-val{font-size:14px;font-weight:700;color:var(--gold)}
+
+/* REFI BOX */
+.refi-box{background:var(--navy);border-radius:var(--radius);padding:13px;margin-bottom:12px}
+.refi-title{font-size:12px;font-weight:700;color:var(--gold);margin-bottom:9px}
+.refi-row{display:flex;justify-content:space-between;padding:3px 0;font-size:11px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.refi-row:last-child{border-bottom:none}
+.refi-lbl{color:rgba(255,255,255,0.7)}
+.refi-val{font-weight:700;color:#FFF}
+.refi-val.green{color:#5CB87A}
+.refi-val.gold{color:var(--gold)}
+.refi-val.red{color:#FF8080}
+
+/* SAVED DEALS */
+.saved-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.saved-tabs{display:flex;gap:6px}
+.saved-tab{padding:7px 16px;border-radius:20px;border:2px solid var(--border-strong);background:var(--surface);cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;color:var(--text-muted);transition:all .15s}
+.saved-tab.on{background:var(--navy);color:#FFF;border-color:var(--navy)}
+.deal-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.deal-card:hover{border-color:var(--gold);box-shadow:0 2px 8px rgba(200,151,58,0.1)}
+.deal-badge{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.deal-badge.flip{background:#EEF0F8}
+.deal-badge.rental{background:#EEF5EE}
+.deal-badge.brrrr{background:#FEF3DC}
+.deal-info{flex:1}
+.deal-addr{font-size:13px;font-weight:600;color:var(--navy)}
+.deal-meta{font-size:10px;color:var(--text-hint);margin-top:2px}
+.deal-crm{font-size:10px;color:var(--text-muted);margin-top:1px}
+.deal-numbers{text-align:left;direction:ltr}
+.deal-profit{font-size:14px;font-weight:700}
+.deal-roe{font-size:10px;color:var(--text-hint);margin-top:1px}
+.deal-actions{display:flex;gap:6px}
+.deal-btn{padding:5px 10px;border-radius:6px;border:1px solid var(--border-strong);background:var(--bg);cursor:pointer;font-family:inherit;font-size:10px;font-weight:600;color:var(--text-muted);transition:all .15s}
+.deal-btn:hover{border-color:var(--navy);color:var(--navy)}
+.deal-btn.danger:hover{border-color:var(--red);color:var(--red)}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-hint);font-style:italic;font-size:12px}
+
+/* SAVE BTN */
+.save-btn{width:100%;padding:12px;background:var(--navy);color:#FFF;border:none;border-radius:var(--radius);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;margin-top:4px}
+.save-btn:hover{background:#253A6A}
+.save-success{background:var(--green)}
+
+/* STATUS BADGE */
+.status-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700}
+.status-badge.analysis{background:#EEF0F8;color:#3A4A8A}
+.status-badge.purchased{background:var(--green-bg);color:var(--green)}
+
+/* TAX */
+.tax-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tax-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:11px}
+.tax-box-title{font-size:11px;font-weight:700;color:var(--navy);margin-bottom:8px}
+.tax-field{display:flex;align-items:center;gap:5px;margin-bottom:6px}
+.tax-field-lbl{font-size:10px;color:var(--text-muted);flex:1;line-height:1.3}
+.tax-inp{width:52px;padding:3px 6px;font-size:11px;border:1px solid var(--border-strong);border-radius:6px;font-family:inherit;direction:ltr;text-align:center;background:#FAFAF8}
+.tax-inp:focus{outline:none;border-color:var(--gold)}
+.tax-div{height:1px;background:var(--border);margin:6px 0}
+.tax-row{display:flex;justify-content:space-between;font-size:10px;padding:2px 0}
+.tax-lbl{color:var(--text-muted)}
+.tax-val{font-weight:600}
+.tax-val.red{color:var(--red)}
+.tax-val.gold{color:var(--gold)}
+.tax-disc{font-size:9px;color:var(--text-hint);font-style:italic;margin-top:8px;padding:7px 10px;background:var(--surface);border-radius:6px;line-height:1.5;border:1px solid var(--border)}
+
+/* DISCLAIMER */
+.disclaimer{font-size:9px;color:var(--text-hint);font-style:italic;margin-top:12px;padding:9px 11px;background:var(--bg);border-radius:var(--radius);border:1px solid var(--border);line-height:1.5}
+
+/* ALERT */
+.alert{padding:8px 12px;border-radius:var(--radius);font-size:11px;font-weight:600;margin:8px 0}
+.alert.warning{background:var(--red-bg);color:var(--red);border:1px solid rgba(139,26,26,0.2)}
+.alert.info{background:var(--gold-light);color:#7A5010;border:1px solid rgba(200,151,58,0.3)}
+/* NOTES */
+.notes-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:12px}
+.notes-label{font-size:11px;font-weight:700;color:var(--navy);margin-bottom:6px}
+.notes-textarea{width:100%;padding:8px 10px;font-size:12px;border:1px solid var(--border-strong);border-radius:var(--radius);font-family:inherit;color:var(--text);background:#FAFAF8;resize:vertical;min-height:70px;line-height:1.5;transition:border-color .15s;direction:rtl}
+.notes-textarea:focus{outline:none;border-color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <div class="hdr-left">
+    <div class="title">GRAT Holdings</div>
+    <div class="sub">סימולטור פנימי — Internal Deal Analyzer</div>
+  </div>
+  <div class="hdr-right">
+    <div class="internal-badge">🔒 INTERNAL</div>
+    <div class="grat-badge">GRAT</div>
+  </div>
+</header>
+
+<div class="main-tabs">
+  <button class="mtab on" onclick="setTab('input',this)">📋 נתוני עסקה</button>
+  <button class="mtab" onclick="setTab('flip',this)">🏠 Flip</button>
+  <button class="mtab" onclick="setTab('rental',this)">🏡 Rental &amp; BRRRR</button>
+  <button class="mtab" onclick="setTab('saved',this)">📂 עסקאות שמורות</button>
+</div>
+
+<!-- =================== TAB 1: INPUT =================== -->
+<div id="tab-input">
+
+  <!-- PROPERTY INFO -->
+  <div class="card">
+    <div class="card-title">פרטי הנכס <span class="card-title-en">Property Details</span></div>
+    <div class="row">
+      <div class="field wide">
+        <div class="flabel">כתובת הנכס <span class="flabel-en">Property Address</span></div>
+        <input type="text" id="prop-address" placeholder="123 Main St, Chicago IL" oninput="markDirty()">
+      </div>
+      <div class="field">
+        <div class="flabel">מספר CRM <span class="flabel-en">CRM ID</span></div>
+        <input type="text" id="prop-crm" placeholder="GRAT-001" oninput="markDirty()">
+      </div>
+      <div class="field">
+        <div class="flabel">סטטוס <span class="flabel-en">Status</span></div>
+        <select id="prop-status" onchange="markDirty()">
+          <option value="analysis">ניתוח לפני הצעה</option>
+          <option value="purchased">נרכש</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEAL PARAMS -->
+  <div class="card">
+    <div class="card-title">נתוני העסקה <span class="card-title-en">Deal Parameters</span></div>
+
+    <div class="cat-section cat-deal">
+      <div class="cat-title" style="color:#3A5BC7"><div class="cat-title-dot" style="background:#3A5BC7"></div>נכס <span style="font-size:9px;font-weight:400;color:var(--text-hint);font-style:italic">Property</span></div>
+      <div class="row">
+        <div class="field"><div class="flabel">מחיר רכישה <span class="flabel-en">Purchase Price</span></div><div class="iw"><span class="sym sym-l">$</span><input type="number" class="sl" id="d-purchase" value="0" oninput="calcAll()"></div></div>
+        <div class="field"><div class="flabel">עלויות שיפוץ <span class="flabel-en">Renovation</span></div><div class="iw"><span class="sym sym-l">$</span><input type="number" class="sl" id="d-reno" value="0" oninput="calcAll()"></div></div>
+        <div class="field"><div class="flabel">ARV <span class="flabel-en">After Repair Value</span></div><div class="iw"><span class="sym sym-l">$</span><input type="number" class="sl" id="d-arv" value="0" oninput="calcAll()"></div></div>
+        <div class="field narrow"><div class="flabel">משך (חודשים) <span class="flabel-en">Duration</span></div><input type="number" id="d-months" value="0" oninput="calcAll()"></div>
+      </div>
+    </div>
+
+    <div class="cat-section cat-closing">
+      <div class="cat-title" style="color:#7A5010"><div class="cat-title-dot" style="background:var(--gold)"></div>עלויות סגירה <span style="font-size:9px;font-weight:400;color:var(--text-hint);font-style:italic">Closing &amp; Agent Costs</span></div>
+      <div class="row">
+        <div class="field"><div class="flabel">מתווך % מ-ARV <span class="flabel-en">Commission %</span></div><div class="iw"><input type="number" class="sr" id="d-commission" value="3" oninput="calcAll()"><span class="sym sym-r">%</span></div></div>
+        <div class="field"><div class="flabel">טייטל + סגירה % מ-ARV <span class="flabel-en">Title %</span></div><div class="iw"><input type="number" class="sr" id="d-title" value="2" oninput="calcAll()"><span class="sym sym-r">%</span></div></div>
+        <div class="field"><div class="flabel">עו"ד <span class="flabel-en">Attorney Fee</span></div><div class="iw"><span class="sym sym-l">$</span><input type="number" class="sl" id="d-legal" value="0" oninput="calcAll()"></div></div>
+        <div class="field"><div class="flabel">LLC <span class="flabel-en">LLC Setup</span></div><div class="iw"><span class="sym sym-l">$</span><input type="number" class="sl" id="d-llc" value="0" oninput="calcAll()"></div></div>
+        <div class="field">
+          <div class="flabel">בלת"מ <span class="flabel-en">Contingency</span></div>
+          <div style="display:flex;gap:5px;align-items:center">
+            <div class="iw" style="flex:1"><span class="sym sym-l" id="cont-sym">$</span><input type="number" class="sl" id="d-contingency" value="0" oninput="calcAll()"></div>
+            <div class="mgmt-toggle" style="flex-shrink:0"><button class="mgmt-btn on" id="cont-btn-dollar" onclick="setContMode('dollar')" style="padding:4px 7px">$</button><button class="mgmt-btn" id="cont-btn-pct" onclick="setContMode('pct')" style="padding:4px 7px">%</button></div>
+          </div>
+          <div style="font-size:9px;color:var(--text-hint);margin-top:2px" id="cont-hint"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cat-section cat-holding">
+      <div class="cat-title" style="color:var(--green)"><div class="cat-title-dot" style="background:var(--green)"></div>הוצאות שוטפות <span style="font-size:9px;font-weight:400;color:var(--text-hint);font-style:italic">Holding Costs / month</span></div>
+      <div class="row">
+        <div class="field"><div class="flabel">ארנונה לחודש <span class="flabel-en">Property Tax</span></div><div class="iw"><span class="sym sym-l">$</span><input type="number" class="sl" id="d-tax" value="0" oninput="calcAll()"></div></div>
+        <div class="field"><div class="flabel">ביטוח לחודש <span class="flabel-en">Insurance</span></div><div class="iw"><span class="sym sym-l">$</span><input type="number" class="sl" id="d-insurance" value="0" oninput="calcAll()"></div></div>
+      </div>
+    </div>
+
+    <div class="cat-section cat-rental">
+      <div class="cat-title" style="color:#C25A1A"><div class="cat-title-dot" style="background:#C25A1A"></div>שכירות <span style="font-size:9px;font-weight:400;color:var(--text-hint);font-style:italic">Rental Income</span></div>
+      <div class="row">
+        <div class="field"><div class="flabel">שכירות חודשית גולמית <span class="flabel-en">Gross Monthly Rent</span></div><div class="iw"><span class="sym sym-l">$</span><input type="number" class="sl" id="d-rent" value="0" oninput="calcAll()"></div></div>
+        <div class="field narrow"><div class="flabel">חודשים עד אכלוס <span class="flabel-en">Months Until Occupied</span></div><input type="number" id="d-vacancy-months" value="0" oninput="calcAll()"></div>
+      </div>
+    </div>
+
+    <div class="cat-section cat-mgmt">
+      <div class="cat-title" style="color:#555"><div class="cat-title-dot" style="background:#7A7A7A"></div>מנהל עבודה <span style="font-size:9px;font-weight:400;color:var(--text-hint);font-style:italic">Project Manager</span></div>
+      <div class="row">
+        <div class="field">
+          <div class="flabel" id="mgmt-label">5% מהרווח <span class="flabel-en">Project Manager Fee</span></div>
+          <div class="iw"><input type="number" class="sr" id="d-mgmt-pct" value="5" step="0.5" oninput="calcAll()"><span class="sym sym-r">%</span></div>
+          <div class="mgmt-toggle" style="margin-top:5px">
+            <button class="mgmt-btn on" id="mgmt-btn-profit" onclick="setMgmtMode('profit')">% מרווח</button>
+            <button class="mgmt-btn" id="mgmt-btn-reno" onclick="setMgmtMode('reno')">% משיפוץ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cat-section cat-extra">
+      <div class="cat-title" style="color:#7A5AC8"><div class="cat-title-dot" style="background:#7A5AC8"></div>הוצאות נוספות <span style="font-size:9px;font-weight:400;color:var(--text-hint);font-style:italic">Additional Expenses</span></div>
+      <div id="extra-expenses-list"></div>
+      <button onclick="addExtraExpense()" class="add-expense-btn">+ הוסף הוצאה</button>
+    </div>
+
+  </div>
+
+  <!-- LENDER -->
+  <div class="card">
+    <div class="card-title">מימון <span class="card-title-en">Financing</span></div>
+    <div class="lender-dropdown-wrap">
+      <button class="lender-dropdown-btn" id="lender-dropdown-btn" onclick="toggleLenderMenu(event)">
+        <span id="lender-selected-label">🏦 Kiavi</span>
+        <span>▾</span>
+      </button>
+      <div class="lender-menu" id="lender-menu" style="display:none">
+        <button class="lender-menu-item on" id="lmenu-kiavi" onclick="setLender('kiavi')">🏦 Kiavi <span style="font-size:9px;color:var(--text-hint)">8.95% | LTC 85%</span></button>
+        <div class="lender-menu-divider"></div>
+        <button class="lender-menu-item" id="lmenu-lendai" onclick="setLender('lendai')">🏦 Lendai <span style="font-size:9px;color:var(--text-hint)">10.75% | LTC 70%</span></button>
+        <div class="lender-menu-divider"></div>
+        <button class="lender-menu-item" id="lmenu-none" onclick="setLender('none')">💵 ללא מימון <span style="font-size:9px;color:var(--text-hint)">Cash Deal</span></button>
+      </div>
+    </div>
+    <div id="lender-fields" class="panel open">
+      <div class="row">
+        <div class="field">
+          <div class="flabel">LTC רכישה % <span class="flabel-en">Purchase LTC</span></div>
+          <div class="iw"><input type="number" class="sr" id="l-ltc" value="90" oninput="calcAll()"><span class="sym sym-r">%</span></div>
+        </div>
+        <div class="field">
+          <div class="flabel">LTC שיפוץ % <span class="flabel-en">Rehab LTC (Holdback)</span></div>
+          <div class="iw"><input type="number" class="sr" id="l-rehab-ltc" value="100" oninput="calcAll()"><span class="sym sym-r">%</span></div>
+        </div>
+        <div class="field">
+          <div class="flabel">ריבית שנתית % <span class="flabel-en">Annual Rate</span></div>
+          <div class="iw"><input type="number" class="sr" id="l-rate" value="8.95" oninput="calcAll()"><span class="sym sym-r">%</span></div>
+        </div>
+        <div class="field">
+          <div class="flabel">Origination % <span class="flabel-en">Origination Fee</span></div>
+          <div class="iw"><input type="number" class="sr" id="l-orig" value="1.25" oninput="calcAll()"><span class="sym sym-r">%</span></div>
+        </div>
+        <div class="field">
+          <div class="flabel">Service Fee <span class="flabel-en">Service Fee $</span></div>
+          <div class="iw"><span class="sym sym-l">$</span><input type="number" class="sl" id="l-service" value="999" oninput="calcAll()"></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <div class="flabel">Draw Fee <span class="flabel-en">Per Draw $</span></div>
+          <div class="iw"><span class="sym sym-l">$</span><input type="number" class="sl" id="l-drawfee" value="200" oninput="calcAll()"></div>
+        </div>
+        <div class="field narrow">
+          <div class="flabel">מס' Draws <span class="flabel-en">Draw Count</span></div>
+          <input type="number" id="l-drawcount" value="4" oninput="calcAll()">
+        </div>
+        <div class="field">
+          <div class="flabel">Draw Factor % <span class="flabel-en">Avg Drawn %</span></div>
+          <div class="iw"><input type="number" class="sr" id="l-drawfactor" value="50" oninput="calcAll()"><span class="sym sym-r">%</span></div>
+        </div>
+      </div>
+      <!-- Lendai extras -->
+      <div id="lendai-extras" style="display:none">
+        <div class="divider"></div>
+        <div class="shdr" style="color:var(--red)">עמלות ייחודיות ללנדאי <span class="shdr-en">Lendai-Specific Fees</span></div>
+        <div class="row">
+          <div class="field"><div class="flabel">Appraisal Fee</div><div class="iw"><span class="sym sym-l">$</span><input type="number" class="sl" id="l-appraisal" value="500" oninput="calcAll()"></div></div>
+          <div class="field"><div class="flabel">Feasibility Report</div><div class="iw"><span class="sym sym-l">$</span><input type="number" class="sl" id="l-feasibility" value="500" oninput="calcAll()"></div></div>
+          <div class="field"><div class="flabel">Legal Fee (מלווה)</div><div class="iw"><span class="sym sym-l">$</span><input type="number" class="sl" id="l-lendai-legal" value="500" oninput="calcAll()"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PARTNERSHIP -->
+  <div class="card">
+    <div class="card-title">מבנה שותפות <span class="card-title-en">Partnership Structure</span></div>
+    <div class="shdr" style="margin-bottom:8px">חלוקת הון <span class="shdr-en">Equity Contribution</span></div>
+    <div class="row">
+      <div class="field">
+        <div class="flabel">% GRAT <span class="flabel-en">GRAT Equity %</span></div>
+        <div class="iw"><input type="number" class="sr" id="p-grat-eq" value="20" oninput="syncEq('grat');calcAll()"><span class="sym sym-r">%</span></div>
+      </div>
+      <div class="field">
+        <div class="flabel">% משקיע <span class="flabel-en">Investor Equity %</span></div>
+        <div class="iw"><input type="number" class="sr" id="p-inv-eq" value="80" oninput="syncEq('inv');calcAll()"><span class="sym sym-r">%</span></div>
+      </div>
+      <div class="field narrow">
+        <div class="flabel">סה"כ</div>
+        <div class="iw"><input type="number" class="sr ro" id="p-eq-total" value="100" readonly><span class="sym sym-r">%</span></div>
+      </div>
+    </div>
+    <div class="warn" id="eq-warn">⚠️ סה"כ הון עצמי חייב להיות 100%</div>
+
+    <div class="divider"></div>
+    <div class="shdr" style="margin-bottom:8px">חלוקת רווח — עצמאית מההון <span class="shdr-en">Profit Split (independent)</span></div>
+    <div class="row">
+      <div class="field">
+        <div class="flabel">% רווח GRAT <span class="flabel-en">GRAT Profit %</span></div>
+        <div class="iw"><input type="number" class="sr" id="p-grat-profit" value="50" oninput="syncProfit('grat');calcAll()"><span class="sym sym-r">%</span></div>
+      </div>
+      <div class="field">
+        <div class="flabel">% רווח משקיע <span class="flabel-en">Investor Profit %</span></div>
+        <div class="iw"><input type="number" class="sr" id="p-inv-profit" value="50" oninput="syncProfit('inv');calcAll()"><span class="sym sym-r">%</span></div>
+      </div>
+      <div class="field narrow">
+        <div class="flabel">סה"כ</div>
+        <div class="iw"><input type="number" class="sr ro" id="p-profit-total" value="100" readonly><span class="sym sym-r">%</span></div>
+      </div>
+    </div>
+    <div class="warn" id="profit-warn">⚠️ סה"כ חלוקת רווח חייב להיות 100%</div>
+
+    <div class="divider"></div>
+    <div class="shdr" style="margin-bottom:8px">מסלול חוב <span class="shdr-en">Debt Track (for comparison)</span></div>
+    <div class="row">
+      <div class="field">
+        <div class="flabel">ריבית שנתית למשקיע <span class="flabel-en">Investor Annual Rate</span></div>
+        <div class="iw"><input type="number" class="sr" id="p-debt-rate" value="10" oninput="calcAll()"><span class="sym sym-r">%</span></div>
+      </div>
+    </div>
+
+    <button class="save-btn" id="save-btn" onclick="saveDeal()">💾 שמור עסקה</button>
+  </div>
+
+  <div class="notes-card">
+    <div class="notes-label">📝 הערות — נתוני עסקה <span style="font-size:9px;font-weight:400;color:var(--text-hint);font-style:italic">Notes — Deal Parameters</span></div>
+    <textarea class="notes-textarea" id="notes-input" placeholder="הערות, תצפיות, שאלות פתוחות לגבי הנכס..." oninput="markDirty()"></textarea>
+  </div>
+
+</div><!-- /tab-input -->
+
+<!-- =================== TAB 2: FLIP =================== -->
+<div id="tab-flip" style="display:none">
+
+  <div class="card">
+    <div class="card-title">Flip — ניתוח פליפ <span class="card-title-en">Fix &amp; Flip Analysis</span></div>
+    <div class="mode-sel" id="flip-mode-sel">
+      <button class="mode-btn on navy" onclick="setFlipMode('investor',this)">👥 עם משקיע<br><span style="font-size:9px;font-weight:400">With Investor</span></button>
+      <button class="mode-btn" onclick="setFlipMode('grat',this)">🏢 GRAT בלבד<br><span style="font-size:9px;font-weight:400">GRAT Only</span></button>
+    </div>
+
+    <!-- FUNDING SUMMARY -->
+    <div id="flip-funding"></div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="card" id="flip-results-card">
+    <div class="card-title">Waterfall — חלוקת תמורה <span class="card-title-en">Distribution Waterfall</span></div>
+    <div id="flip-waterfall"></div>
+    <div class="divider"></div>
+    <div class="shdr">סיכום תשואות <span class="shdr-en">Returns Summary</span></div>
+    <div id="flip-results-table"></div>
+
+    <!-- TAX -->
+    <div class="tog-row" style="margin-top:12px">
+      <div class="tog-label">חישוב מס — משקיע ישראלי <span class="tog-label-en">Israeli Investor Tax</span></div>
+      <label class="toggle-switch"><input type="checkbox" id="flip-tax-tog" onchange="togglePanel2('flip-tax-panel');calcFlip()"><span class="tslider"></span></label>
+    </div>
+    <div class="panel" id="flip-tax-panel">
+      <div class="tax-grid">
+        <div class="tax-box">
+          <div class="tax-box-title">💼 מסלול חוב</div>
+          <div class="tax-field"><span class="tax-field-lbl">ניכוי מקור ארה"ב (W-8BEN)</span><input type="number" class="tax-inp" id="ft-us-debt" value="17.5" step="0.5" oninput="calcFlip()"><span style="font-size:9px;color:var(--text-hint)">%</span></div>
+          <div class="tax-field"><span class="tax-field-lbl">מס ריבית ישראל</span><input type="number" class="tax-inp" id="ft-il-debt" value="25" oninput="calcFlip()"><span style="font-size:9px;color:var(--text-hint)">%</span></div>
+          <div class="tax-div"></div>
+          <div class="tax-row"><span class="tax-lbl">מס ארה"ב</span><span class="tax-val red" id="ft-r-debt-us">$0</span></div>
+          <div class="tax-row"><span class="tax-lbl">מס נוסף ישראל</span><span class="tax-val red" id="ft-r-debt-il">$0</span></div>
+          <div class="tax-row"><span class="tax-lbl" style="font-weight:700">נטו אחרי מס</span><span class="tax-val gold" id="ft-r-debt-net">$0</span></div>
+        </div>
+        <div class="tax-box">
+          <div class="tax-box-title">🤝 מסלול JV</div>
+          <div class="tax-field"><span class="tax-field-lbl">FIRPTA (על מכירה)</span><input type="number" class="tax-inp" id="ft-firpta" value="15" oninput="calcFlip()"><span style="font-size:9px;color:var(--text-hint)">%</span></div>
+          <div class="tax-field"><span class="tax-field-lbl">מס רווח הון ישראל</span><input type="number" class="tax-inp" id="ft-il-jv" value="25" oninput="calcFlip()"><span style="font-size:9px;color:var(--text-hint)">%</span></div>
+          <div class="tax-div"></div>
+          <div class="tax-row"><span class="tax-lbl">FIRPTA</span><span class="tax-val red" id="ft-r-jv-firpta">$0</span></div>
+          <div class="tax-row"><span class="tax-lbl">מס נוסף ישראל</span><span class="tax-val red" id="ft-r-jv-il">$0</span></div>
+          <div class="tax-row"><span class="tax-lbl" style="font-weight:700">נטו אחרי מס</span><span class="tax-val gold" id="ft-r-jv-net">$0</span></div>
+        </div>
+      </div>
+      <div class="tax-disc">⚠️ אומדן בלבד. יש להתייעץ עם רואה חשבון ישראלי המכיר את אמנת המס ישראל-ארה"ב.</div>
+    </div>
+    <div class="disclaimer">⚠️ אומדן בלבד. אין הבטחת תשואה. כל השקעה כרוכה בסיכון לרבות אובדן קרן.</div>
+  </div>
+
+  <div class="notes-card">
+    <div class="notes-label">📝 הערות — Flip <span style="font-size:9px;font-weight:400;color:var(--text-hint);font-style:italic">Notes — Flip Analysis</span></div>
+    <textarea class="notes-textarea" id="notes-flip" placeholder="הערות לגבי ניתוח הפליפ, תרחישים, סיכונים..." oninput="markDirty()"></textarea>
+  </div>
+
+</div><!-- /tab-flip -->
+
+<!-- =================== TAB 3: RENTAL & BRRRR =================== -->
+<div id="tab-rental" style="display:none">
+
+  <div class="card">
+    <div class="card-title">Rental &amp; BRRRR <span class="card-title-en">Buy, Hold &amp; Exit Strategy</span></div>
+
+    <!-- MODE: RENTAL vs BRRRR -->
+    <div class="shdr" style="margin-bottom:8px">אסטרטגיה <span class="shdr-en">Strategy</span></div>
+    <div class="mode-sel">
+      <button class="mode-btn on" onclick="setRentalMode('rental',this)">🏡 Rental — קנה והחזק<br><span style="font-size:9px;font-weight:400">Buy, Hold &amp; Sell</span></button>
+      <button class="mode-btn" onclick="setRentalMode('brrrr',this)">🔄 BRRRR — Refi<br><span style="font-size:9px;font-weight:400">Buy, Rehab, Rent, Refi</span></button>
+    </div>
+
+    <!-- INVESTOR MODE -->
+    <div class="shdr" style="margin-bottom:8px">שותפות <span class="shdr-en">Partnership</span></div>
+    <div class="mode-sel">
+      <button class="mode-btn on navy" onclick="setRentalInvMode('investor',this)">👥 עם משקיע<br><span style="font-size:9px;font-weight:400">With Investor</span></button>
+      <button class="mode-btn" onclick="setRentalInvMode('grat',this)">🏢 GRAT בלבד<br><span style="font-size:9px;font-weight:400">GRAT Only</span></button>
+    </div>
+
+    <!-- HOLD PARAMS -->
+    <div class="shdr" style="margin-bottom:8px">תקופת החזקה <span class="shdr-en">Hold Period</span></div>
+    <div class="row">
+      <div class="field narrow">
+        <div class="flabel">שנות החזקה <span class="flabel-en">Hold Years</span></div>
+        <input type="number" id="r-years" value="0" oninput="calcRental()">
+      </div>
+      <div class="field narrow">
+        <div class="flabel">חודשים נוספים <span class="flabel-en">Extra Months</span></div>
+        <input type="number" id="r-months-extra" value="0" oninput="calcRental()">
+      </div>
+      <div class="field">
+        <div class="flabel">עליית ערך שנתית % <span class="flabel-en">Annual Appreciation</span></div>
+        <div class="iw"><input type="number" class="sr" id="r-appreciation" value="3" oninput="calcRental()"><span class="sym sym-r">%</span></div>
+      </div>
+    </div>
+
+    <!-- NOI -->
+    <div class="divider"></div>
+    <div class="shdr" style="margin-bottom:8px">הוצאות תפעוליות <span class="shdr-en">Operating Expenses (% of Rent)</span></div>
+    <div class="row">
+      <div class="field"><div class="flabel">Vacancy % <span class="flabel-en">of Rent</span></div><div class="iw"><input type="number" class="sr" id="r-vacancy" value="8" oninput="calcRental()"><span class="sym sym-r">%</span></div></div>
+      <div class="field"><div class="flabel">ניהול % <span class="flabel-en">Mgmt</span></div><div class="iw"><input type="number" class="sr" id="r-mgmt" value="9" oninput="calcRental()"><span class="sym sym-r">%</span></div></div>
+      <div class="field"><div class="flabel">תחזוקה % <span class="flabel-en">Maintenance</span></div><div class="iw"><input type="number" class="sr" id="r-maintenance" value="5" oninput="calcRental()"><span class="sym sym-r">%</span></div></div>
+      <div class="field"><div class="flabel">CapEx % <span class="flabel-en">Capital Expenses</span></div><div class="iw"><input type="number" class="sr" id="r-capex" value="5" oninput="calcRental()"><span class="sym sym-r">%</span></div></div>
+    </div>
+    <div id="r-noi-preview"></div>
+
+    <!-- BRRRR PARAMS -->
+    <div id="brrrr-params" style="display:none">
+      <div class="divider"></div>
+      <div class="shdr" style="margin-bottom:8px">הגדרות Refi <span class="shdr-en">Refinance Settings</span></div>
+      <div class="mode-sel">
+        <button class="mode-btn on" onclick="setBRRRRType('fast',this)">⚡ BRRRR מהיר<br><span style="font-size:9px;font-weight:400">Refi תוך 6-18 חודשים</span></button>
+        <button class="mode-btn" onclick="setBRRRRType('hold',this)">🔄 החזק ואז Refi<br><span style="font-size:9px;font-weight:400">Hold X שנים → Refi</span></button>
+      </div>
+      <div class="row">
+        <div class="field"><div class="flabel">LTV Refi % <span class="flabel-en">Refi LTV</span></div><div class="iw"><input type="number" class="sr" id="r-refi-ltv" value="75" oninput="calcRental()"><span class="sym sym-r">%</span></div></div>
+        <div class="field"><div class="flabel">ריבית Refi % <span class="flabel-en">Refi Rate</span></div><div class="iw"><input type="number" class="sr" id="r-refi-rate" value="7" oninput="calcRental()"><span class="sym sym-r">%</span></div></div>
+        <div class="field"><div class="flabel">עלויות סגירת Refi % <span class="flabel-en">Refi Closing Costs</span></div><div class="iw"><input type="number" class="sr" id="r-refi-closing" value="2" oninput="calcRental()"><span class="sym sym-r">%</span></div></div>
+        <div class="field narrow" id="refi-fast-field">
+          <div class="flabel">חודשים עד Refi <span class="flabel-en">Months to Refi</span></div>
+          <input type="number" id="r-refi-months" value="9" oninput="calcRental()">
+        </div>
+        <div class="field narrow" id="refi-hold-field" style="display:none">
+          <div class="flabel">שנים עד Refi <span class="flabel-en">Years to Refi</span></div>
+          <input type="number" id="r-refi-years" value="3" oninput="calcRental()">
+        </div>
+        <div class="field narrow">
+          <div class="flabel">מינימום אכלוס לפני Refi (חודשים) <span class="flabel-en">Min Occupancy Before Refi</span></div>
+          <input type="number" id="r-min-occupancy" value="3" oninput="calcRental()">
+        </div>
+      </div>
+
+      <!-- BRRRR EXIT FOR INVESTOR -->
+      <div id="brrrr-inv-exit" style="display:none">
+        <div class="alert info">⚠️ יציאת משקיע רלוונטית למסלול JV בלבד</div>
+        <div class="shdr" style="margin-bottom:8px">תרחיש יציאת משקיע JV <span class="shdr-en">JV Investor Exit Scenario</span></div>
+        <div class="mode-sel">
+          <button class="mode-btn on" onclick="setBRRRRExit('out',this)">📤 משקיע יוצא<br><span style="font-size:9px;font-weight:400">Cash Out מחזיר קרן</span></button>
+          <button class="mode-btn" onclick="setBRRRRExit('stay',this)">🤝 שניכם נשארים<br><span style="font-size:9px;font-weight:400">ממשיכים חצי חצי</span></button>
+          <button class="mode-btn" onclick="setBRRRRExit('buyout',this)">🏢 GRAT קונה חלק<br><span style="font-size:9px;font-weight:400">לפי שווי ביום Refi</span></button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RENTAL RESULTS -->
+  <div class="card">
+    <div class="card-title">תוצאות <span class="card-title-en">Results</span></div>
+    <div id="rental-refi-box"></div>
+    <div id="rental-waterfall"></div>
+    <div class="divider"></div>
+    <div class="shdr">סיכום תשואות <span class="shdr-en">Returns Summary</span></div>
+    <div id="rental-results-table"></div>
+    <div class="disclaimer">⚠️ אומדן בלבד. אין הבטחת תשואה. כל השקעה כרוכה בסיכון לרבות אובדן קרן.</div>
+  </div>
+
+  <div class="notes-card">
+    <div class="notes-label">📝 הערות — Rental &amp; BRRRR <span style="font-size:9px;font-weight:400;color:var(--text-hint);font-style:italic">Notes — Rental &amp; BRRRR Analysis</span></div>
+    <textarea class="notes-textarea" id="notes-rental" placeholder="הערות לגבי השכרה, תרחישי Refi, אסטרטגיית יציאה..." oninput="markDirty()"></textarea>
+  </div>
+
+</div><!-- /tab-rental -->
+
+<!-- =================== TAB 4: SAVED =================== -->
+<div id="tab-saved" style="display:none">
+  <div class="card">
+    <div class="saved-header">
+      <div class="card-title" style="margin-bottom:0">עסקאות שמורות <span class="card-title-en">Saved Deals</span></div>
+      <div class="saved-tabs">
+        <button class="saved-tab on" onclick="setSavedFilter('all',this)">הכל</button>
+        <button class="saved-tab" onclick="setSavedFilter('analysis',this)">ניתוח לפני הצעה</button>
+        <button class="saved-tab" onclick="setSavedFilter('purchased',this)">נרכש ✅</button>
+      </div>
+    </div>
+    <div id="saved-list"></div>
+  </div>
+</div>
+
+</div><!-- /page -->
+
+<script>
+// ─── GLOBALS ───
+const $ = id => document.getElementById(id);
+const v = id => parseFloat($(id)?.value) || 0;
+const vs = id => $(id)?.value || '';
+const fmt = n => '$' + Math.round(Math.abs(n)).toLocaleString();
+const fmtS = n => (n<0?'−$':'$') + Math.round(Math.abs(n)).toLocaleString();
+const pctF = n => Math.round(n*10)/10 + '%';
+const pctR = n => Math.round(n) + '%';
+
+let currentLender = 'kiavi';
+let flipMode = 'investor';
+let rentalMode = 'rental';
+let rentalInvMode = 'investor';
+let brrrrType = 'fast';
+let brrrrExit = 'out';
+let savedFilter = 'all';
+let isDirty = false;
+let mgmtMode = 'profit';
+let contMode = 'dollar'; // contingency mode
+let extraExpenses = []; // [{desc, amt}]
+
+const LENDERS = {
+  kiavi:  {ltc:90, rehabLtc:100, rate:8.95, orig:1.25, service:999,  drawfee:200, drawcount:4, drawfactor:50},
+  lendai: {ltc:70, rehabLtc:100, rate:10.75,orig:3,    service:1500, drawfee:250, drawcount:4, drawfactor:50}
+};
+
+// ─── TAB NAVIGATION ───
+function setTab(t, btn) {
+  document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  ['input','flip','rental','saved'].forEach(id => $('tab-'+id).style.display = id===t?'':'none');
+  if (t==='flip') calcFlip();
+  if (t==='rental') calcRental();
+  if (t==='saved') renderSaved();
+}
+
+// ─── LENDER DROPDOWN ───
+function toggleLenderMenu(e) {
+  e.stopPropagation();
+  const menu = $('lender-menu');
+  menu.style.display = menu.style.display === 'none' ? '' : 'none';
+}
+document.addEventListener('click', () => { const m = $('lender-menu'); if(m) m.style.display='none'; });
+
+const LENDER_NAMES = {kiavi:'🏦 Kiavi', lendai:'🏦 Lendai', none:'💵 ללא מימון'};
+
+function setLender(name) {
+  currentLender = name;
+  $('lender-selected-label').textContent = LENDER_NAMES[name] || name;
+  ['kiavi','lendai','none'].forEach(n => {
+    const el = $('lmenu-'+n);
+    if(el) el.classList.toggle('on', n===name);
+  });
+  $('lender-menu').style.display = 'none';
+  const on = name !== 'none';
+  $('lender-fields').classList.toggle('open', on);
+  $('lendai-extras').style.display = name==='lendai' ? '' : 'none';
+  if (on && LENDERS[name]) {
+    const cfg = LENDERS[name];
+    $('l-ltc').value=cfg.ltc; $('l-rehab-ltc').value=cfg.rehabLtc; $('l-rate').value=cfg.rate;
+    $('l-orig').value=cfg.orig; $('l-service').value=cfg.service;
+    $('l-drawfee').value=cfg.drawfee; $('l-drawcount').value=cfg.drawcount;
+    $('l-drawfactor').value=cfg.drawfactor;
+  }
+  calcAll();
+}
+
+// ─── MGMT MODE ───
+function setMgmtMode(mode) {
+  mgmtMode = mode;
+  $('mgmt-btn-profit').classList.toggle('on', mode==='profit');
+  $('mgmt-btn-reno').classList.toggle('on', mode==='reno');
+  const pct = mode==='profit' ? 5 : 2;
+  $('d-mgmt-pct').value = pct;
+  $('mgmt-label').innerHTML = mode==='profit'
+    ? 'מנהל עבודה — 5% מהרווח <span class="flabel-en">Project Manager Fee</span>'
+    : 'מנהל עבודה — 2% משיפוץ <span class="flabel-en">Project Manager Fee</span>';
+  calcAll();
+}
+
+// ─── CONTINGENCY MODE ───
+function setContMode(mode) {
+  contMode = mode;
+  $('cont-btn-dollar').classList.toggle('on', mode==='dollar');
+  $('cont-btn-pct').classList.toggle('on', mode==='pct');
+  $('cont-sym').textContent = mode==='dollar' ? '$' : '';
+  $('d-contingency').classList.toggle('sl', mode==='dollar');
+  updateContHint();
+  calcAll();
+}
+function updateContHint() {
+  const reno = v('d-reno');
+  if (contMode==='pct' && reno>0) {
+    const amt = reno * v('d-contingency')/100;
+    $('cont-hint').textContent = `= $${Math.round(amt).toLocaleString()} (${v('d-contingency')}% × ${fmt(reno)} שיפוץ)`;
+  } else {
+    $('cont-hint').textContent = '';
+  }
+}
+function getContingencyAmt() {
+  const val = v('d-contingency');
+  if (contMode==='pct') return v('d-reno') * val/100;
+  return val;
+}
+
+// ─── EXTRA EXPENSES ───
+function addExtraExpense() {
+  extraExpenses.push({desc:'', amt:0});
+  renderExtraExpenses();
+}
+function removeExtraExpense(idx) {
+  extraExpenses.splice(idx, 1);
+  renderExtraExpenses();
+  calcAll();
+}
+function updateExtraExpense(idx, field, val) {
+  extraExpenses[idx][field] = field==='amt' ? parseFloat(val)||0 : val;
+  calcAll();
+}
+function getExtraExpensesTotal() {
+  return extraExpenses.reduce((sum, e) => sum + (e.amt||0), 0);
+}
+function renderExtraExpenses() {
+  $('extra-expenses-list').innerHTML = extraExpenses.map((e,i) => `
+    <div class="extra-exp-row">
+      <input type="text" class="extra-exp-desc" placeholder="תיאור הוצאה" value="${e.desc}"
+        oninput="updateExtraExpense(${i},'desc',this.value)">
+      <div class="extra-exp-wrap">
+        <span class="extra-exp-sym">$</span>
+        <input type="number" class="extra-exp-amt" value="${e.amt||0}"
+          oninput="updateExtraExpense(${i},'amt',this.value)">
+      </div>
+      <button class="extra-exp-del" onclick="removeExtraExpense(${i})">✕</button>
+    </div>`).join('');
+}
+function syncEq(changed) {
+  if (changed==='grat') $('p-inv-eq').value = Math.max(0, 100-v('p-grat-eq'));
+  else $('p-grat-eq').value = Math.max(0, 100-v('p-inv-eq'));
+  const t = Math.round(v('p-grat-eq')+v('p-inv-eq'));
+  $('p-eq-total').value = t;
+  t!==100 ? $('eq-warn').classList.add('show') : $('eq-warn').classList.remove('show');
+}
+function syncProfit(changed) {
+  if (changed==='grat') $('p-inv-profit').value = Math.max(0,100-v('p-grat-profit'));
+  else $('p-grat-profit').value = Math.max(0,100-v('p-inv-profit'));
+  const t=Math.round(v('p-grat-profit')+v('p-inv-profit'));
+  $('p-profit-total').value=t;
+  t!==100 ? $('profit-warn').classList.add('show') : $('profit-warn').classList.remove('show');
+}
+function togglePanel2(id) { $(id).classList.toggle('open'); }
+function markDirty() { isDirty=true; }
+
+// ─── MODE SETTERS ───
+function setFlipMode(m,btn) {
+  flipMode=m;
+  $('flip-mode-sel').querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('on','navy'));
+  btn.classList.add('on','navy'); calcFlip();
+}
+function setRentalMode(m,btn) {
+  rentalMode=m;
+  btn.closest('.mode-sel').querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  $('brrrr-params').style.display = m==='brrrr' ? '' : 'none';
+  $('brrrr-inv-exit').style.display = (m==='brrrr'&&rentalInvMode==='investor') ? '' : 'none';
+  calcRental();
+}
+function setRentalInvMode(m,btn) {
+  rentalInvMode=m;
+  btn.closest('.mode-sel').querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('on','navy'));
+  btn.classList.add('on','navy');
+  $('brrrr-inv-exit').style.display = (rentalMode==='brrrr'&&m==='investor') ? '' : 'none';
+  calcRental();
+}
+function setBRRRRType(t,btn) {
+  brrrrType=t;
+  btn.closest('.mode-sel').querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  $('refi-fast-field').style.display = t==='fast' ? '' : 'none';
+  $('refi-hold-field').style.display = t==='hold' ? '' : 'none';
+  calcRental();
+}
+function setBRRRRExit(e,btn) {
+  brrrrExit=e;
+  btn.closest('.mode-sel').querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); calcRental();
+}
+function setSavedFilter(f,btn) {
+  savedFilter=f;
+  document.querySelectorAll('.saved-tab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); renderSaved();
+}
+
+// ─── CORE CALCULATIONS ───
+function getDealData() {
+  const purchase=v('d-purchase'), reno=v('d-reno'), arv=v('d-arv'), months=v('d-months')||1;
+  const totalCost = purchase + reno;
+  const commissionAmt = arv * v('d-commission')/100;
+  const titleAmt = arv * v('d-title')/100;
+  const legal = v('d-legal');
+  const llc = v('d-llc');
+  const contingency = getContingencyAmt();
+  const extraExpTotal = getExtraExpensesTotal();
+  const taxMo = v('d-tax'), insuranceMo = v('d-insurance');
+  const holdingCosts = (taxMo + insuranceMo) * months;
+  const closingCosts = commissionAmt + titleAmt + legal + llc + contingency + extraExpTotal;
+  const rent = v('d-rent');
+  const vacancyMonths = v('d-vacancy-months'); // months before occupancy (no NOI)
+  const mgmtPct = v('d-mgmt-pct')/100;
+
+  // Lender
+  const lenderOn = currentLender !== 'none';
+  const ltcPct = lenderOn ? v('l-ltc')/100 : 0;
+  const rehabLtcPct = lenderOn ? v('l-rehab-ltc')/100 : 0;
+  const annRate = lenderOn ? v('l-rate')/100 : 0;
+  const origPct = lenderOn ? v('l-orig')/100 : 0;
+  const serviceFee = lenderOn ? v('l-service') : 0;
+  const drawFee = lenderOn ? v('l-drawfee') : 0;
+  const drawCount = lenderOn ? v('l-drawcount') : 0;
+  const drawFactor = lenderOn ? v('l-drawfactor')/100 : 0;
+  const lendaiExtras = currentLender==='lendai' ? v('l-appraisal')+v('l-feasibility')+v('l-lendai-legal') : 0;
+
+  const loanPurchase = purchase * ltcPct;                    // הלוואת רכישה
+  const loanRehab = reno * rehabLtcPct;                      // הלוואת שיפוץ (holdback)
+  const totalLoan = loanPurchase + loanRehab;                // סה"כ הלוואה
+  const origFee = loanPurchase * origPct;                    // origination על הלוואת רכישה בלבד
+  const interestPurchase = loanPurchase * annRate * (months/12);
+  const rehabInterest = loanRehab * drawFactor * annRate * (months/12); // ריבית על חלק שנמשך
+  const drawCosts = drawFee * drawCount;
+  const totalFinanceCosts = interestPurchase + rehabInterest + origFee + serviceFee + drawCosts + lendaiExtras;
+
+  const equityAmt = totalCost - totalLoan;                   // הון עצמי = עלות כוללת − סה"כ הלוואה
+  const gratEqPct = v('p-grat-eq'), invEqPct = v('p-inv-eq');
+  const gratAmt = equityAmt * gratEqPct/100;
+  const invAmt = equityAmt * invEqPct/100;
+  const gratProfitPct = v('p-grat-profit'), invProfitPct = v('p-inv-profit');
+  const debtRate = v('p-debt-rate');
+
+  // Mgmt cost
+  const grossRevenueFlip = arv - totalCost - closingCosts - holdingCosts - totalFinanceCosts;
+  const mgmtCostFlip = mgmtMode==='profit'
+    ? Math.max(0, grossRevenueFlip) * mgmtPct
+    : reno * mgmtPct;
+
+  const totalExpFlip = closingCosts + holdingCosts + totalFinanceCosts + mgmtCostFlip;
+  // loanRepay = כל מה שחוזר ללנדר: קרן רכישה + קרן שיפוץ + ריבית + עמלות
+  const loanRepay = totalLoan + interestPurchase + rehabInterest + origFee + serviceFee + drawCosts + lendaiExtras;
+  const netAfterExp = arv - totalCost - totalExpFlip;
+
+  return {
+    purchase, reno, arv, months, totalCost,
+    commissionAmt, titleAmt, legal, llc, contingency, extraExpTotal,
+    taxMo, insuranceMo, holdingCosts, closingCosts,
+    rent, vacancyMonths, mgmtPct, mgmtCostFlip,
+    lenderOn, loanPurchase, loanRehab, totalLoan, loanRepay,
+    origFee, serviceFee, drawCosts,
+    interestPurchase, rehabInterest, totalFinanceCosts, lendaiExtras,
+    equityAmt, gratAmt, invAmt, gratEqPct, invEqPct,
+    gratProfitPct, invProfitPct, debtRate,
+    totalExpFlip, netAfterExp
+  };
+}
+
+// ─── EXPENSE BREAKDOWN POPUP ───
+function showExpenseBreakdown(d) {
+  const {commissionAmt,titleAmt,legal,llc,contingency,extraExpTotal,
+    taxMo,insuranceMo,months,holdingCosts,
+    interestPurchase,rehabInterest,origFee,serviceFee,drawCosts,lendaiExtras,
+    totalFinanceCosts,mgmtCostFlip,closingCosts} = d;
+  const expWithoutMgmt = closingCosts + holdingCosts + totalFinanceCosts;
+  const rows = [
+    {label:'מתווך', en:'Agent Commission', amt:commissionAmt},
+    {label:'טייטל + סגירה', en:'Title + Closing', amt:titleAmt},
+    {label:'עו"ד', en:'Attorney', amt:legal},
+    {label:'LLC', en:'LLC Setup', amt:llc},
+    {label:'בלת"מ', en:'Contingency', amt:contingency},
+  ];
+  if (extraExpenses.length > 0) {
+    extraExpenses.forEach(e => {
+      if (e.amt > 0) rows.push({label: e.desc||'הוצאה נוספת', en:'Extra', amt:e.amt});
+    });
+  }
+  rows.push(
+    {label:`ארנונה (${months} חודשים)`, en:'Property Tax', amt:taxMo*months},
+    {label:`ביטוח (${months} חודשים)`, en:'Insurance', amt:insuranceMo*months},
+    {label:'ריבית רכישה', en:'Purchase Interest', amt:interestPurchase},
+    {label:'ריבית שיפוץ', en:'Rehab Interest', amt:rehabInterest},
+    {label:'Origination Fee', en:'', amt:origFee},
+    {label:'Service Fee', en:'', amt:serviceFee},
+    {label:'Draw Fees', en:'', amt:drawCosts},
+  );
+  if (lendaiExtras > 0) rows.push({label:'עמלות Lendai', en:'Lendai Extras', amt:lendaiExtras});
+
+  const html = `
+    <div id="expense-popup-overlay" onclick="closeExpensePopup()"
+      style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px">
+      <div onclick="event.stopPropagation()"
+        style="background:var(--surface);border-radius:var(--radius-lg);padding:20px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div style="font-size:14px;font-weight:700;color:var(--navy)">פירוט הוצאות <span style="font-size:11px;font-weight:400;color:var(--text-hint)">Expense Breakdown</span></div>
+          <button onclick="closeExpensePopup()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-muted)">✕</button>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          ${rows.map(r => r.amt > 0 ? `
+            <tr>
+              <td style="padding:5px 8px;border-bottom:1px solid var(--border);color:var(--text-muted)">${r.label}${r.en?' <span style="font-size:10px;color:var(--text-hint);font-style:italic">'+r.en+'</span>':''}</td>
+              <td style="padding:5px 8px;border-bottom:1px solid var(--border);text-align:left;direction:ltr;font-weight:600;color:var(--red)">−${fmt(r.amt)}</td>
+            </tr>` : '').join('')}
+          <tr style="background:var(--bg)">
+            <td style="padding:7px 8px;font-weight:700;color:var(--navy)">סה"כ ללא מנהל עבודה</td>
+            <td style="padding:7px 8px;text-align:left;direction:ltr;font-weight:700;color:var(--red)">−${fmt(expWithoutMgmt)}</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 8px;border-bottom:1px solid var(--border);color:var(--text-muted)">מנהל עבודה</td>
+            <td style="padding:5px 8px;border-bottom:1px solid var(--border);text-align:left;direction:ltr;font-weight:600;color:var(--red)">−${fmt(mgmtCostFlip)}</td>
+          </tr>
+          <tr style="background:var(--navy)">
+            <td style="padding:7px 8px;font-weight:700;color:#FFF">סה"כ הוצאות</td>
+            <td style="padding:7px 8px;text-align:left;direction:ltr;font-weight:700;color:var(--gold)">−${fmt(expWithoutMgmt+mgmtCostFlip)}</td>
+          </tr>
+        </table>
+      </div>
+    </div>`;
+  const el = document.createElement('div');
+  el.id = 'expense-popup-container';
+  el.innerHTML = html;
+  document.body.appendChild(el);
+}
+function closeExpensePopup() {
+  const el = $('expense-popup-container');
+  if (el) el.remove();
+}
+
+function calcAll() { markDirty(); updateContHint(); calcFlip(); calcRental(); }
+
+// ─── FLIP CALC ───
+function calcFlip() {
+  const d = getDealData();
+  const {purchase,reno,arv,months,totalCost,closingCosts,holdingCosts,totalFinanceCosts,totalExpFlip,
+    lenderOn,loanPurchase,loanRehab,totalLoan,loanRepay,interestPurchase,rehabInterest,origFee,serviceFee,drawCosts,
+    equityAmt,gratAmt,invAmt,gratEqPct,invEqPct,gratProfitPct,invProfitPct,debtRate,
+    commissionAmt,titleAmt,legal,contingency,extraExpTotal,taxMo,insuranceMo,lendaiExtras,mgmtCostFlip} = d;
+
+  // Funding calculations
+  const purchaseLtcPct = lenderOn ? v('l-ltc') : 0;
+  const rehabLtcPct2 = lenderOn ? v('l-rehab-ltc') : 0;
+  const purchaseEquity = purchase - loanPurchase;
+  const rehabEquity = reno - loanRehab;
+  const activeInvAmt = flipMode==='grat' ? 0 : invAmt;
+  const activeGratAmt = flipMode==='grat' ? equityAmt : gratAmt;
+  const lPct = totalCost>0 ? Math.round(totalLoan/totalCost*100) : 0;
+  const iPct = totalCost>0 ? Math.round(activeInvAmt/totalCost*100) : 0;
+  const gPct = 100 - lPct - iPct;
+
+  $('flip-funding').innerHTML = `
+    <div style="background:var(--bg);border-radius:var(--radius);padding:12px;margin-bottom:10px">
+      <table style="width:100%;border-collapse:collapse;font-size:11px">
+        <thead>
+          <tr>
+            <th style="text-align:right;padding:5px 8px;color:var(--text-muted);font-weight:600;border-bottom:2px solid var(--border)">סעיף</th>
+            <th style="text-align:left;direction:ltr;padding:5px 8px;color:var(--lender);font-weight:600;border-bottom:2px solid var(--border)">לנדר</th>
+            <th style="text-align:left;direction:ltr;padding:5px 8px;color:var(--gold);font-weight:600;border-bottom:2px solid var(--border)">הון עצמי</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-muted)">
+              רכישה <span style="color:var(--text-hint);font-size:9px">${fmt(purchase)}</span>
+            </td>
+            <td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:left;direction:ltr;color:var(--lender);font-weight:600">
+              ${lenderOn ? `${fmt(loanPurchase)} <span style="color:var(--text-hint);font-weight:400">(${purchaseLtcPct}%)</span>` : '—'}
+            </td>
+            <td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:left;direction:ltr;font-weight:600">
+              ${fmt(purchaseEquity)} <span style="color:var(--text-hint);font-weight:400">(${purchase>0?Math.round(purchaseEquity/purchase*100):0}%)</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:6px 8px;border-bottom:2px solid var(--border);color:var(--text-muted)">
+              שיפוץ <span style="color:var(--text-hint);font-size:9px">${fmt(reno)}</span>
+            </td>
+            <td style="padding:6px 8px;border-bottom:2px solid var(--border);text-align:left;direction:ltr;color:var(--lender);font-weight:600">
+              ${lenderOn ? `${fmt(loanRehab)} <span style="color:var(--text-hint);font-weight:400">(${rehabLtcPct2}%)</span>` : '—'}
+            </td>
+            <td style="padding:6px 8px;border-bottom:2px solid var(--border);text-align:left;direction:ltr;font-weight:600">
+              ${fmt(rehabEquity)} <span style="color:var(--text-hint);font-weight:400">(${reno>0?Math.round(rehabEquity/reno*100):0}%)</span>
+            </td>
+          </tr>
+          <tr style="background:var(--surface)">
+            <td style="padding:7px 8px;font-weight:700;color:var(--navy)">סה"כ ${fmt(totalCost)}</td>
+            <td style="padding:7px 8px;text-align:left;direction:ltr;font-weight:700;color:var(--lender)">${lenderOn?fmt(totalLoan):'—'}</td>
+            <td style="padding:7px 8px;text-align:left;direction:ltr;font-weight:700">${fmt(equityAmt)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    ${lenderOn || flipMode==='investor' ? `
+    <div style="background:var(--bg);border-radius:var(--radius);padding:12px;margin-bottom:10px">
+      <div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:5px">
+        חלוקת הון עצמי — ${fmt(equityAmt)}
+        <span style="font-size:9px;font-weight:400;color:var(--text-hint)">(${lenderOn?100-lPct:100}% מסך העלות)</span>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:120px;background:var(--surface);border-radius:8px;padding:10px 12px;border:1px solid var(--border)">
+          <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">משקיע (${invEqPct}%)</div>
+          <div style="font-size:16px;font-weight:700;color:var(--gold)">${fmt(activeInvAmt)}</div>
+          <div style="font-size:9px;color:var(--text-hint);margin-top:2px">${iPct}% מסך העלות הכוללת</div>
+        </div>
+        <div style="flex:1;min-width:120px;background:var(--surface);border-radius:8px;padding:10px 12px;border:1px solid var(--border)">
+          <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">GRAT (${gratEqPct}%)</div>
+          <div style="font-size:16px;font-weight:700;color:var(--navy)">${fmt(activeGratAmt)}</div>
+          <div style="font-size:9px;color:var(--text-hint);margin-top:2px">${gPct}% מסך העלות הכוללת</div>
+        </div>
+      </div>
+    </div>` : ''}
+    <div class="bar">
+      ${lenderOn ? `<div class="bar-seg" style="width:${lPct}%;background:var(--lender)">${lPct>8?lPct+'%':''}</div>` : ''}
+      <div class="bar-seg" style="width:${iPct}%;background:var(--gold)">${iPct>5?iPct+'%':''}</div>
+      <div class="bar-seg" style="width:${gPct}%;background:var(--navy)">${gPct>5?gPct+'%':''}</div>
+    </div>
+    <div class="bar-legend" style="margin-top:6px">
+      ${lenderOn ? `<div class="bar-leg-item"><div class="bar-dot" style="background:var(--lender)"></div>לנדר ${fmt(totalLoan)} (${lPct}%)</div>` : ''}
+      <div class="bar-leg-item"><div class="bar-dot" style="background:var(--gold)"></div>משקיע ${fmt(activeInvAmt)} (${iPct}%)</div>
+      <div class="bar-leg-item"><div class="bar-dot" style="background:var(--navy)"></div>GRAT ${fmt(activeGratAmt)} (${gPct}%)</div>
+    </div>`;
+
+  // JV Waterfall — with mgmt
+  const afterLender = arv - (lenderOn ? loanRepay : 0);
+  const afterExpenses = afterLender - closingCosts - holdingCosts - mgmtCostFlip;
+  const afterInvPrincipal = afterExpenses - (flipMode==='grat'?0:invAmt);
+  const afterGratPrincipal = afterInvPrincipal - (flipMode==='grat'?equityAmt:gratAmt);
+  const distributableProfit = afterGratPrincipal;
+
+  const invJvProfit = flipMode==='grat' ? 0 : distributableProfit * invProfitPct/100;
+  const gratJvProfit = flipMode==='grat' ? distributableProfit : distributableProfit * gratProfitPct/100;
+  const invJvROE = invAmt>0 ? invJvProfit/invAmt*100 : 0;
+  const invJvROIAnnual = months>0 ? invJvROE/months*12 : 0;
+  const gratJvROE = (flipMode==='grat'?equityAmt:gratAmt)>0 ? gratJvProfit/(flipMode==='grat'?equityAmt:gratAmt)*100 : 0;
+  const gratJvROIAnnual = months>0 ? gratJvROE/months*12 : 0;
+
+  // Debt track
+  const invDebtEarning = flipMode==='grat' ? 0 : invAmt * (debtRate/100) * (months/12);
+  const invDebtROE = invAmt>0 ? invDebtEarning/invAmt*100 : 0;
+  const invDebtROIAnnual = months>0 ? invDebtROE/months*12 : 0;
+  const gratDebtNet = arv - (lenderOn?loanRepay:0) - closingCosts - holdingCosts - mgmtCostFlip - (flipMode==='grat'?equityAmt:invAmt+invDebtEarning+gratAmt);
+  const gratDebtROE = (flipMode==='grat'?equityAmt:gratAmt)>0 ? gratDebtNet/(flipMode==='grat'?equityAmt:gratAmt)*100 : 0;
+  const gratDebtROIAnnual = months>0 ? gratDebtROE/months*12 : 0;
+
+  // GRAT only
+  const gratOnlyProfit = arv - totalCost - closingCosts - holdingCosts - mgmtCostFlip - (lenderOn?loanRepay-loanPurchase:0);
+  const gratOnlyROE = equityAmt>0 ? gratOnlyProfit/equityAmt*100 : 0;
+  const gratOnlyROIAnnual = months>0 ? gratOnlyROE/months*12 : 0;
+
+  // Waterfall steps
+  const steps = [];
+  steps.push({cls:'s-rev',num:'➜',label:'הכנסה ממכירה',labelEn:'Sale Revenue',detail:`ARV: ${fmt(arv)}`,amt:fmt(arv),amtCls:''});
+  if (lenderOn) steps.push({cls:'s-lender',num:'1',label:'פירעון לנדר',labelEn:'Lender Repayment',
+    detail:`קרן רכישה ${fmt(loanPurchase)} + קרן שיפוץ ${fmt(loanRehab)} + ריבית ${fmt(interestPurchase+rehabInterest)} + origination ${fmt(origFee)} + service ${fmt(serviceFee)} + draws ${fmt(drawCosts)}${lendaiExtras>0?' + Lendai '+fmt(lendaiExtras):''}`,
+    amt:`−${fmt(loanRepay-totalLoan)}`,amtCls:'red'});
+  const s=lenderOn?2:1;
+  steps.push({cls:'s-inv',num:s,label:'הוצאות עסקה',labelEn:'Deal Expenses',
+    detail:`מתווך ${fmt(commissionAmt)} + טייטל ${fmt(titleAmt)} + עו"ד ${fmt(legal)} + בלת"מ ${fmt(contingency)} + ארנונה+ביטוח ${fmt(holdingCosts)} + מנהל עבודה ${fmt(mgmtCostFlip)}`,
+    amt:`−${fmt(closingCosts+holdingCosts+mgmtCostFlip)}`,amtCls:'red'});
+  if (flipMode==='investor') {
+    steps.push({cls:'s-inv',num:s+1,label:'החזר קרן משקיע',labelEn:'Return Investor Principal',
+      detail:`${invEqPct}% × ${fmt(equityAmt)}`,amt:`−${fmt(invAmt)}`,amtCls:'red'});
+    steps.push({cls:'s-grat',num:s+2,label:'החזר קרן GRAT',labelEn:'Return GRAT Principal',
+      detail:`${gratEqPct}% × ${fmt(equityAmt)}`,amt:`−${fmt(gratAmt)}`,amtCls:'red'});
+    const pCls = distributableProfit>=0?'s-profit':'s-loss';
+    steps.push({cls:pCls,num:s+3,label:distributableProfit>=0?'💰 רווח לחלוקה':'⚠️ הפסד',
+      labelEn:distributableProfit>=0?'Distributable Profit':'Loss',
+      detail:`GRAT ${gratProfitPct}% = ${fmtS(gratJvProfit)} | משקיע ${invProfitPct}% = ${fmtS(invJvProfit)}`,
+      amt:fmtS(distributableProfit),amtCls:distributableProfit>=0?'green':'red'});
+  } else {
+    steps.push({cls:'s-grat',num:s+1,label:'החזר קרן GRAT',labelEn:'Return GRAT Capital',
+      detail:`100% הון עצמי: ${fmt(equityAmt)}`,amt:`−${fmt(equityAmt)}`,amtCls:'red'});
+    const pCls = distributableProfit>=0?'s-profit':'s-loss';
+    steps.push({cls:pCls,num:s+2,label:distributableProfit>=0?'💰 רווח GRAT':'⚠️ הפסד',
+      labelEn:distributableProfit>=0?'GRAT Profit':'Loss',
+      amt:fmtS(distributableProfit),amtCls:distributableProfit>=0?'green':'red'});
+  }
+
+  // Render waterfall
+  let wfHtml='';
+  steps.forEach((s,i)=>{
+    if(i>0) wfHtml+=`<div class="wf-arrow">↓</div>`;
+    wfHtml+=`<div class="wf-step ${s.cls}"><div class="wf-num">${s.num}</div><div class="wf-content"><div class="wf-label">${s.label} <span class="wf-label-en">${s.labelEn}</span></div>${s.detail?`<div class="wf-detail">${s.detail}</div>`:''}</div><div class="wf-amt ${s.amtCls}">${s.amt}</div></div>`;
+  });
+  $('flip-waterfall').innerHTML = wfHtml;
+
+  // Results
+  if (flipMode === 'grat') {
+    const expWithoutMgmt = closingCosts + holdingCosts + totalFinanceCosts;
+    $('flip-results-table').innerHTML = `
+      <table class="rtable">
+        <thead><tr><th>מדד</th><th>🏢 GRAT בלבד</th></tr></thead>
+        <tbody>
+          <tr><td>סך עלות</td><td class="val-bold">${fmt(totalCost)}</td></tr>
+          <tr style="cursor:pointer" onclick="showExpenseBreakdown(getDealData())" title="לחץ לפירוט">
+            <td style="color:var(--navy)">📋 כל ההוצאות <span style="font-size:9px;color:var(--text-hint)">(ללא מנהל עבודה)</span></td>
+            <td class="val-bold">${fmt(expWithoutMgmt)}</td>
+          </tr>
+          <tr><td>מנהל עבודה</td><td class="val-bold">${fmt(mgmtCostFlip)}</td></tr>
+          <tr><td>רווח נקי</td><td class="${gratOnlyProfit>=0?'val-green':'val-red'}">${fmtS(gratOnlyProfit)}</td></tr>
+          <tr><td>% מ-ARV</td><td class="val-gold">${pctR(arv>0?gratOnlyProfit/arv*100:0)}</td></tr>
+          <tr><td>ROE</td><td class="val-gold">${pctR(gratOnlyROE)}</td></tr>
+          <tr><td>תשואה שנתית</td><td class="val-gold">${pctR(gratOnlyROIAnnual)}</td></tr>
+        </tbody>
+      </table>`;
+  } else {
+    const expWithoutMgmt = closingCosts + holdingCosts + totalFinanceCosts;
+    $('flip-results-table').innerHTML = `
+      <table class="rtable">
+        <thead>
+          <tr><th>מדד</th><th>📊 העסקה</th><th class="dark-hdr">💼 חוב</th><th class="gold-hdr">🤝 JV</th></tr>
+        </thead>
+        <tbody>
+          <tr class="section-row"><td colspan="4">📊 העסקה הכוללת</td></tr>
+          <tr><td>סך עלות</td><td class="val-bold">${fmt(totalCost)}</td><td>—</td><td>—</td></tr>
+          <tr style="cursor:pointer" onclick="showExpenseBreakdown(getDealData())" title="לחץ לפירוט">
+            <td style="color:var(--navy)">📋 כל ההוצאות <span style="font-size:9px;color:var(--text-hint)">(ללא מנהל עבודה)</span></td>
+            <td class="val-bold">${fmt(expWithoutMgmt)}</td><td>—</td><td>—</td>
+          </tr>
+          <tr><td>מנהל עבודה</td><td class="val-bold">${fmt(mgmtCostFlip)}</td><td>—</td><td>—</td></tr>
+          <tr><td>רווח כולל לחלוקה</td><td class="${distributableProfit>=0?'val-green':'val-red'}">${fmtS(distributableProfit)}</td><td>—</td><td>—</td></tr>
+          <tr class="section-row"><td colspan="4">👥 המשקיע</td></tr>
+          <tr><td>הון שהביא</td><td>—</td><td class="val-bold">${fmt(invAmt)}</td><td class="val-bold">${fmt(invAmt)}</td></tr>
+          <tr><td>רווח</td><td>—</td><td class="${invDebtEarning>=0?'val-green':'val-red'}">${fmtS(invDebtEarning)}</td><td class="${invJvProfit>=0?'val-green':'val-red'}">${fmtS(invJvProfit)}</td></tr>
+          <tr><td>ROE</td><td>—</td><td class="val-gold">${pctR(invDebtROE)}</td><td class="val-gold">${pctR(invJvROE)}</td></tr>
+          <tr><td>תשואה שנתית</td><td>—</td><td class="val-gold">${pctR(invDebtROIAnnual)}</td><td class="val-gold">${pctR(invJvROIAnnual)}</td></tr>
+          <tr><td>סה"כ מקבל</td><td>—</td><td class="val-bold">${fmt(invAmt+invDebtEarning)}</td><td class="val-bold">${fmt(invAmt+invJvProfit)}</td></tr>
+          <tr class="section-row"><td colspan="4">🏢 GRAT</td></tr>
+          <tr><td>הון שהביאה</td><td>—</td><td class="val-bold">${fmt(gratAmt)}</td><td class="val-bold">${fmt(gratAmt)}</td></tr>
+          <tr><td>רווח</td><td>—</td><td class="${gratDebtNet>=0?'val-green':'val-red'}">${fmtS(gratDebtNet)}</td><td class="${gratJvProfit>=0?'val-green':'val-red'}">${fmtS(gratJvProfit)}</td></tr>
+          <tr><td>ROE</td><td>—</td><td class="val-gold">${pctR(gratDebtROE)}</td><td class="val-gold">${pctR(gratJvROE)}</td></tr>
+          <tr><td>תשואה שנתית</td><td>—</td><td class="val-gold">${pctR(gratDebtROIAnnual)}</td><td class="val-gold">${pctR(gratJvROIAnnual)}</td></tr>
+        </tbody>
+      </table>`;
+
+    if ($('flip-tax-tog').checked) {
+      const dBase = Math.max(0,invDebtEarning);
+      const dUs = dBase*v('ft-us-debt')/100, dIl = Math.max(0,dBase*v('ft-il-debt')/100-dUs);
+      $('ft-r-debt-us').textContent=fmt(dUs); $('ft-r-debt-il').textContent=fmt(dIl);
+      $('ft-r-debt-net').textContent=fmtS(dBase-dUs-dIl);
+      const jBase=Math.max(0,invJvProfit);
+      const jF=jBase*v('ft-firpta')/100, jIl=Math.max(0,jBase*v('ft-il-jv')/100-jF);
+      $('ft-r-jv-firpta').textContent=fmt(jF); $('ft-r-jv-il').textContent=fmt(jIl);
+      $('ft-r-jv-net').textContent=fmtS(jBase-jF-jIl);
+    }
+  }
+}
+// ─── RENTAL / BRRRR CALC ───
+function calcRental() {
+  const d = getDealData();
+  const {purchase,reno,arv,totalCost,lenderOn,loanPurchase,loanRehab,totalLoan,loanRepay,equityAmt,
+    gratAmt,invAmt,gratEqPct,invEqPct,gratProfitPct,invProfitPct,debtRate,
+    closingCosts,totalFinanceCosts,rent,vacancyMonths,mgmtCostFlip} = d;
+
+  const years = v('r-years')||0, moExtra = v('r-months-extra');
+  const totalMonths = Math.round(years*12+moExtra)||1;
+  const appreciation = v('r-appreciation');
+  const taxMo = v('d-tax'), insuranceMo = v('d-insurance');
+
+  // NOI — rent starts after vacancyMonths
+  const effectiveRentMonths = Math.max(0, totalMonths - vacancyMonths);
+  const vacancyMo = rent * v('r-vacancy')/100;
+  const mgmtMo = rent * v('r-mgmt')/100;
+  const maintMo = rent * v('r-maintenance')/100;
+  const capexMo = rent * v('r-capex')/100;
+  const totalExpMo = vacancyMo + mgmtMo + maintMo + capexMo + taxMo + insuranceMo;
+  const noiMo = rent - totalExpMo;
+  const noiAnnual = noiMo*12;
+  const noiTotal = noiMo * effectiveRentMonths; // only during occupied period
+  const holdingCostsDuringVacancy = (taxMo + insuranceMo) * vacancyMonths; // costs with no income
+  const capRate = totalCost>0 ? noiAnnual/totalCost*100 : 0;
+
+  // ARV with and without appreciation
+  const arvAtExit = arv * Math.pow(1+appreciation/100, years+moExtra/12);
+  const arvAtExitNoAppreciation = arv; // no appreciation scenario
+
+  // NOI preview
+  $('r-noi-preview').innerHTML = `
+    <div style="background:var(--bg);border-radius:var(--radius);padding:10px;margin-top:8px">
+      <table class="noi-tbl">
+        <tr><td>שכירות גולמית</td><td style="color:var(--text-hint);font-size:9px">Gross Rent</td><td style="color:var(--green)">${fmt(rent)}/חודש</td></tr>
+        <tr><td style="padding-right:10px">Vacancy (${v('r-vacancy')}%)</td><td></td><td style="color:var(--red)">−${fmt(vacancyMo)}</td></tr>
+        <tr><td style="padding-right:10px">ניהול (${v('r-mgmt')}%)</td><td style="color:var(--text-hint);font-size:9px">Mgmt</td><td style="color:var(--red)">−${fmt(mgmtMo)}</td></tr>
+        <tr><td style="padding-right:10px">תחזוקה (${v('r-maintenance')}%)</td><td></td><td style="color:var(--red)">−${fmt(maintMo)}</td></tr>
+        <tr><td style="padding-right:10px">CapEx (${v('r-capex')}%)</td><td></td><td style="color:var(--red)">−${fmt(capexMo)}</td></tr>
+        <tr><td style="padding-right:10px">ארנונה + ביטוח</td><td></td><td style="color:var(--red)">−${fmt(taxMo+insuranceMo)}</td></tr>
+        <tr class="noi-total"><td>NOI חודשי</td><td></td><td style="${noiMo>=0?'color:var(--green)':'color:var(--red)'}">${fmtS(noiMo)}</td></tr>
+        <tr><td style="font-size:10px">NOI שנתי</td><td></td><td style="color:var(--gold)">${fmt(noiAnnual)}/שנה</td></tr>
+        <tr><td style="font-size:10px">NOI לתקופה (${effectiveRentMonths} חודשים)</td><td></td><td style="color:var(--gold)">${fmt(noiTotal)}</td></tr>
+        ${vacancyMonths>0?`<tr><td style="font-size:10px;color:var(--red)">הוצאות בתקופת ריקון (${vacancyMonths} חודשים)</td><td></td><td style="color:var(--red)">−${fmt(holdingCostsDuringVacancy)}</td></tr>`:''}
+        <tr><td style="font-size:10px">Cap Rate</td><td></td><td style="color:var(--gold)">${pctR(capRate)}</td></tr>
+      </table>
+    </div>`;
+
+  let refiHtml='', wfSteps=[], invJvProfit=0, gratJvProfit=0, invDebtEarning=0, activePeriodMonths=totalMonths;
+  const useInvestor = rentalInvMode === 'investor';
+  const activeInvAmt = useInvestor ? invAmt : 0;
+  const activeGratAmt = useInvestor ? gratAmt : equityAmt;
+
+  const invNoiShare = noiTotal * invProfitPct/100;
+  const gratNoiShare = noiTotal * gratProfitPct/100;
+
+  if (rentalMode === 'rental') {
+    activePeriodMonths = totalMonths;
+    invDebtEarning = useInvestor ? invAmt*(debtRate/100)*(totalMonths/12) : 0;
+
+    // Two scenarios: with appreciation and without
+    const calcScenario = (exitArv) => {
+      const capitalGain = exitArv - totalCost - (lenderOn?(loanRepay-loanPurchase):0) - closingCosts - holdingCostsDuringVacancy;
+      const cgInv = useInvestor ? capitalGain*invProfitPct/100 : 0;
+      const cgGrat = useInvestor ? capitalGain*gratProfitPct/100 : capitalGain;
+      const invP = useInvestor ? invNoiShare+cgInv : 0;
+      const gratP = useInvestor ? gratNoiShare+cgGrat : noiTotal+capitalGain;
+      return {capitalGain, cgInv, cgGrat, invP, gratP};
+    };
+
+    const sc = calcScenario(arvAtExit);
+    const scNoApp = calcScenario(arvAtExitNoAppreciation);
+    invJvProfit = sc.invP;
+    gratJvProfit = sc.gratP;
+
+    wfSteps = [
+      {cls:'s-rev',num:'➜',label:`הכנסות לאורך ${years>0?years+' שנים':''}${moExtra>0?' '+moExtra+' חודשים':''}`,labelEn:'Total Income',
+       detail:`NOI ${fmt(noiMo)}/חודש × ${effectiveRentMonths} חודשים + מכירה`,
+       amt:fmt(noiTotal+arvAtExit),amtCls:''},
+      {cls:'s-inv',num:'1',label:`NOI — ${useInvestor?'משקיע ('+invProfitPct+'%)':'GRAT (100%)'}`,labelEn:'NOI Share (monthly)',
+       detail:'חולק חודשית בזמן אמת',amt:fmtS(useInvestor?invNoiShare:noiTotal),amtCls:noiTotal>=0?'green':'red'},
+    ];
+    if (useInvestor) {
+      wfSteps.push({cls:'s-grat',num:'2',label:`NOI — GRAT (${gratProfitPct}%)`,labelEn:'NOI Share',
+        detail:'חולק חודשית',amt:fmtS(gratNoiShare),amtCls:'green'});
+      wfSteps.push({cls:'s-inv',num:'3',label:'החזר קרן משקיע',labelEn:'Return Principal',
+        detail:`${invEqPct}% × ${fmt(equityAmt)}`,amt:`−${fmt(invAmt)}`,amtCls:'red'});
+      wfSteps.push({cls:'s-grat',num:'4',label:'החזר קרן GRAT',labelEn:'Return Principal',
+        detail:`${gratEqPct}% × ${fmt(equityAmt)}`,amt:`−${fmt(gratAmt)}`,amtCls:'red'});
+      wfSteps.push({cls:sc.capitalGain>=0?'s-profit':'s-loss',num:'5',
+        label:sc.capitalGain>=0?'💰 רווח הון':'⚠️ הפסד הון',labelEn:'Capital Gain',
+        detail:`GRAT ${gratProfitPct}% = ${fmtS(sc.cgGrat)} | משקיע ${invProfitPct}% = ${fmtS(sc.cgInv)}`,
+        amt:fmtS(sc.capitalGain),amtCls:sc.capitalGain>=0?'green':'red'});
+    } else {
+      wfSteps.push({cls:'s-grat',num:'2',label:'החזר קרן GRAT',labelEn:'Return Capital',
+        amt:`−${fmt(equityAmt)}`,amtCls:'red',detail:''});
+      wfSteps.push({cls:sc.capitalGain>=0?'s-profit':'s-loss',num:'3',
+        label:sc.capitalGain>=0?'💰 רווח GRAT':'⚠️ הפסד',labelEn:'GRAT Profit',
+        amt:fmtS(sc.capitalGain),amtCls:sc.capitalGain>=0?'green':'red',detail:''});
+    }
+
+    // Dual appreciation results
+    const invJvROE = invAmt>0?sc.invP/invAmt*100:0;
+    const invJvROIAnnual = totalMonths>0?invJvROE/totalMonths*12:0;
+    const gratJvROE = activeGratAmt>0?sc.gratP/activeGratAmt*100:0;
+    const gratJvROIAnnual = totalMonths>0?gratJvROE/totalMonths*12:0;
+    const invJvROE2 = invAmt>0?scNoApp.invP/invAmt*100:0;
+    const gratJvROE2 = activeGratAmt>0?scNoApp.gratP/activeGratAmt*100:0;
+
+    $('rental-results-table').innerHTML = `
+      <table class="rtable">
+        <thead>
+          <tr><th>מדד</th><th>📊 עם עליית ערך ${appreciation}%</th><th>📊 ללא עליית ערך</th></tr>
+        </thead>
+        <tbody>
+          <tr class="section-row"><td colspan="3">📊 העסקה</td></tr>
+          <tr><td>NOI חודשי</td><td class="${noiMo>=0?'val-green':'val-red'}" colspan="2">${fmtS(noiMo)}</td></tr>
+          <tr><td>NOI שנתי</td><td class="val-green" colspan="2">${fmt(noiAnnual)}</td></tr>
+          <tr><td>NOI לתקופה (${effectiveRentMonths} חודשים)</td><td class="val-green" colspan="2">${fmt(noiTotal)}</td></tr>
+          <tr><td>Cap Rate</td><td class="val-gold" colspan="2">${pctR(capRate)}</td></tr>
+          <tr><td>ערך בסוף</td><td class="val-bold">${fmt(arvAtExit)}</td><td class="val-bold">${fmt(arvAtExitNoAppreciation)}</td></tr>
+          ${useInvestor?`
+          <tr class="section-row"><td colspan="3">👥 המשקיע (JV)</td></tr>
+          <tr><td>רווח</td><td class="${sc.invP>=0?'val-green':'val-red'}">${fmtS(sc.invP)}</td><td class="${scNoApp.invP>=0?'val-green':'val-red'}">${fmtS(scNoApp.invP)}</td></tr>
+          <tr><td>ROE</td><td class="val-gold">${pctR(invJvROE)}</td><td class="val-gold">${pctR(invJvROE2)}</td></tr>
+          <tr><td>תשואה שנתית</td><td class="val-gold">${pctR(invJvROIAnnual)}</td><td class="val-gold">${pctR(totalMonths>0?invJvROE2/totalMonths*12:0)}</td></tr>
+          `:''}
+          <tr class="section-row"><td colspan="3">🏢 GRAT</td></tr>
+          <tr><td>רווח</td><td class="${sc.gratP>=0?'val-green':'val-red'}">${fmtS(sc.gratP)}</td><td class="${scNoApp.gratP>=0?'val-green':'val-red'}">${fmtS(scNoApp.gratP)}</td></tr>
+          <tr><td>ROE</td><td class="val-gold">${pctR(gratJvROE)}</td><td class="val-gold">${pctR(gratJvROE2)}</td></tr>
+          <tr><td>תשואה שנתית</td><td class="val-gold">${pctR(gratJvROIAnnual)}</td><td class="val-gold">${pctR(totalMonths>0?gratJvROE2/totalMonths*12:0)}</td></tr>
+        </tbody>
+      </table>`;
+
+  } else {
+    // BRRRR
+    const refiLTV = v('r-refi-ltv'), refiRate = v('r-refi-rate');
+    const refiClosingPct = v('r-refi-closing')/100;
+    const minOccupancy = v('r-min-occupancy');
+    let refiMonths = brrrrType==='fast' ? v('r-refi-months') : Math.round(v('r-refi-years')*12);
+    refiMonths = Math.max(refiMonths, vacancyMonths + minOccupancy); // enforce min occupancy
+    const refiYears = brrrrType==='hold' ? v('r-refi-years') : refiMonths/12;
+    const arvAtRefi = brrrrType==='hold' ? arv*Math.pow(1+appreciation/100,refiYears) : arv;
+    const refiLoanAmt = arvAtRefi * refiLTV/100;
+    const refiClosingCosts = refiLoanAmt * refiClosingPct;
+    const cashOut = refiLoanAmt - (lenderOn?loanRepay:0) - refiClosingCosts;
+    const refiInterestAnnual = refiLoanAmt * refiRate/100;
+    const postRefiMonths = Math.max(0, totalMonths - refiMonths);
+    const refiInterestTotal = refiInterestAnnual * postRefiMonths/12;
+    activePeriodMonths = refiMonths;
+    invDebtEarning = useInvestor ? invAmt*(debtRate/100)*(refiMonths/12) : 0;
+
+    const effectiveRentToRefi = Math.max(0, refiMonths - vacancyMonths);
+    const noiToRefi = noiMo * effectiveRentToRefi;
+    const invNoiToRefi = useInvestor ? noiToRefi*invProfitPct/100 : 0;
+    const gratNoiToRefi = useInvestor ? noiToRefi*gratProfitPct/100 : noiToRefi;
+    const postRefiNOI = noiMo * postRefiMonths;
+
+    const minOccupancyNote = refiMonths > (brrrrType==='fast'?v('r-refi-months'):Math.round(v('r-refi-years')*12))
+      ? `<div class="alert info">ℹ️ Refi נדחה ל-${refiMonths} חודשים בגלל דרישת מינימום אכלוס (${minOccupancy} חודשים)</div>` : '';
+
+    const cashOutWarning = cashOut < 0
+      ? `<div class="alert warning">⚠️ Cash Out שלילי (${fmtS(cashOut)}) — Refi לא מכסה Bridge + עלויות סגירה</div>` : '';
+
+    if (!useInvestor) {
+      gratJvProfit = noiToRefi + cashOut + postRefiNOI - refiInterestTotal;
+      refiHtml = minOccupancyNote + cashOutWarning + buildRefiBox('🏢 GRAT בלבד', arvAtRefi, refiLTV, refiLoanAmt, refiClosingCosts, cashOut, 0, cashOut, refiInterestAnnual, noiToRefi, postRefiMonths, '');
+    } else if (brrrrExit === 'out') {
+      const gratCashOut = cashOut - invAmt;
+      invJvProfit = invNoiToRefi;
+      gratJvProfit = gratNoiToRefi + gratCashOut + postRefiNOI - refiInterestTotal;
+      const shortfall = invAmt > cashOut ? `<div class="alert warning">⚠️ Cash Out (${fmt(cashOut)}) לא מספיק לקרן משקיע (${fmt(invAmt)}) — גירעון ${fmt(invAmt-cashOut)}</div>` : '';
+      refiHtml = minOccupancyNote + cashOutWarning + shortfall + buildRefiBox('📤 משקיע יוצא', arvAtRefi, refiLTV, refiLoanAmt, refiClosingCosts, cashOut, invAmt, gratCashOut, refiInterestAnnual, noiToRefi, postRefiMonths, '');
+    } else if (brrrrExit === 'stay') {
+      const cashOutInv = cashOut*invProfitPct/100, cashOutGrat = cashOut*gratProfitPct/100;
+      invJvProfit = invNoiToRefi + cashOutInv + postRefiNOI*invProfitPct/100 - refiInterestTotal*invProfitPct/100;
+      gratJvProfit = gratNoiToRefi + cashOutGrat + postRefiNOI*gratProfitPct/100 - refiInterestTotal*gratProfitPct/100;
+      refiHtml = minOccupancyNote + cashOutWarning + buildRefiBox('🤝 שניכם נשארים', arvAtRefi, refiLTV, refiLoanAmt, refiClosingCosts, cashOut, 0, cashOut, refiInterestAnnual, noiToRefi, postRefiMonths, '', true, invProfitPct, gratProfitPct);
+    } else {
+      const buyout = arvAtRefi * invProfitPct/100;
+      invJvProfit = invNoiToRefi + buyout;
+      gratJvProfit = gratNoiToRefi - buyout + cashOut + postRefiNOI - refiInterestTotal;
+      refiHtml = minOccupancyNote + cashOutWarning + buildRefiBox('🏢 GRAT קונה חלק המשקיע', arvAtRefi, refiLTV, refiLoanAmt, refiClosingCosts, cashOut, buyout, cashOut-buyout, refiInterestAnnual, noiToRefi, postRefiMonths, '');
+    }
+
+    wfSteps = [
+      {cls:'s-rev',num:'➜',label:`NOI עד Refi (${effectiveRentToRefi} חודשים)`,labelEn:'NOI Until Refi',
+       detail:`${fmt(noiMo)}/חודש${vacancyMonths>0?' (אחרי '+vacancyMonths+' חודשי ריקון)':''}`,amt:fmt(noiToRefi),amtCls:''},
+      {cls:'s-lender',num:'1',label:'Refi — Cash Out',labelEn:'Refinance',
+       detail:`ARV ${fmt(arvAtRefi)} × ${refiLTV}% = ${fmt(refiLoanAmt)} | עלויות סגירה ${fmt(refiClosingCosts)} | Cash Out ${fmtS(cashOut)}`,
+       amt:fmtS(cashOut),amtCls:cashOut>=0?'green':'red'},
+    ];
+
+    const invJvROE = useInvestor&&invAmt>0 ? invJvProfit/invAmt*100 : 0;
+    const invJvROIAnnual = activePeriodMonths>0 ? invJvROE/activePeriodMonths*12 : 0;
+    const gratJvROE = activeGratAmt>0 ? gratJvProfit/activeGratAmt*100 : 0;
+    const gratJvROIAnnual = activePeriodMonths>0 ? gratJvROE/activePeriodMonths*12 : 0;
+
+    $('rental-results-table').innerHTML = `
+      <table class="rtable">
+        <thead><tr><th>מדד</th><th>${useInvestor?'👥 עם משקיע':'🏢 GRAT בלבד'}</th></tr></thead>
+        <tbody>
+          <tr class="section-row"><td colspan="2">📊 העסקה</td></tr>
+          <tr><td>NOI חודשי</td><td class="${noiMo>=0?'val-green':'val-red'}">${fmtS(noiMo)}</td></tr>
+          <tr><td>NOI שנתי</td><td class="val-green">${fmt(noiAnnual)}</td></tr>
+          <tr><td>Cap Rate</td><td class="val-gold">${pctR(capRate)}</td></tr>
+          <tr><td>ARV ביום Refi</td><td class="val-bold">${fmt(arvAtRefi)}</td></tr>
+          <tr><td>Cash Out נטו</td><td class="${cashOut>=0?'val-green':'val-red'}">${fmtS(cashOut)}</td></tr>
+          ${useInvestor?`
+          <tr class="section-row"><td colspan="2">👥 המשקיע (${Math.round(activePeriodMonths/12*10)/10} שנים)</td></tr>
+          <tr><td>רווח</td><td class="${invJvProfit>=0?'val-green':'val-red'}">${fmtS(invJvProfit)}</td></tr>
+          <tr><td>ROE</td><td class="val-gold">${pctR(invJvROE)}</td></tr>
+          <tr><td>תשואה שנתית</td><td class="val-gold">${pctR(invJvROIAnnual)}</td></tr>
+          `:''}
+          <tr class="section-row"><td colspan="2">🏢 GRAT</td></tr>
+          <tr><td>רווח</td><td class="${gratJvProfit>=0?'val-green':'val-red'}">${fmtS(gratJvProfit)}</td></tr>
+          <tr><td>ROE</td><td class="val-gold">${pctR(gratJvROE)}</td></tr>
+          <tr><td>תשואה שנתית</td><td class="val-gold">${pctR(gratJvROIAnnual)}</td></tr>
+        </tbody>
+      </table>`;
+  }
+
+  $('rental-refi-box').innerHTML = refiHtml;
+  let wfHtml='';
+  wfSteps.forEach((s,i)=>{
+    if(i>0) wfHtml+=`<div class="wf-arrow">↓</div>`;
+    wfHtml+=`<div class="wf-step ${s.cls}"><div class="wf-num">${s.num}</div><div class="wf-content"><div class="wf-label">${s.label} <span class="wf-label-en">${s.labelEn}</span></div>${s.detail?`<div class="wf-detail">${s.detail}</div>`:''}</div><div class="wf-amt ${s.amtCls}">${s.amt}</div></div>`;
+  });
+  $('rental-waterfall').innerHTML = wfHtml;
+}
+
+function buildRefiBox(title, arvAtRefi, refiLTV, refiLoanAmt, refiClosingCosts, cashOut, invExit, gratRemains, refiInterestAnnual, noiToRefi, postRefiMonths, extra='', isSplit=false, invPct=50, gratPct=50) {
+  return `<div class="refi-box">
+    <div class="refi-title">${title}</div>
+    <div class="refi-row"><span class="refi-lbl">ARV ביום Refi</span><span class="refi-val">${fmt(arvAtRefi)}</span></div>
+    <div class="refi-row"><span class="refi-lbl">הלוואת Refi (${refiLTV}% LTV)</span><span class="refi-val">${fmt(refiLoanAmt)}</span></div>
+    <div class="refi-row"><span class="refi-lbl">עלויות סגירת Refi</span><span class="refi-val red">−${fmt(refiClosingCosts)}</span></div>
+    <div class="refi-row"><span class="refi-lbl">Cash Out נטו (אחרי Bridge + עלויות)</span><span class="refi-val ${cashOut>=0?'green':'red'}">${fmtS(cashOut)}</span></div>
+    ${invExit>0?`<div class="refi-row"><span class="refi-lbl">${isSplit?'Cash Out למשקיע ('+invPct+'%)':'יציאת משקיע'}</span><span class="refi-val gold">−${fmt(invExit)}</span></div>`:''}
+    <div class="refi-row"><span class="refi-lbl">${isSplit?'Cash Out ל-GRAT ('+gratPct+'%)':'נשאר ל-GRAT'}</span><span class="refi-val green">${fmtS(gratRemains)}</span></div>
+    <div class="refi-row"><span class="refi-lbl">NOI עד Refi</span><span class="refi-val green">${fmt(noiToRefi)}</span></div>
+    <div class="refi-row"><span class="refi-lbl">ריבית Refi שנתית (${postRefiMonths} חודשים)</span><span class="refi-val">${fmt(refiInterestAnnual)}/שנה</span></div>
+    ${extra}
+  </div>`;
+}
+
+// ─── SAVE / LOAD ───
+function saveDeal() {
+  const d = getDealData();
+  const deal = {
+    id: Date.now(),
+    address: vs('prop-address') || 'ללא כתובת',
+    crm: vs('prop-crm'),
+    status: vs('prop-status'),
+    date: new Date().toLocaleDateString('he-IL'),
+    dealType: rentalMode === 'rental' ? 'rental' : 'brrrr',
+    withInvestor: rentalInvMode === 'investor',
+    // Notes
+    notesInput: $('notes-input').value || '',
+    notesFlip: $('notes-flip').value || '',
+    notesRental: $('notes-rental').value || '',
+    inputs: {
+      purchase: v('d-purchase'), reno: v('d-reno'), arv: v('d-arv'), months: v('d-months'),
+      commission: v('d-commission'), title: v('d-title'), legal: v('d-legal'), llc: v('d-llc'), contingency: v('d-contingency'),
+      tax: v('d-tax'), insurance: v('d-insurance'),
+      lender: currentLender, ltc: v('l-ltc'), rehabLtc: v('l-rehab-ltc'), rate: v('l-rate'), orig: v('l-orig'),
+      service: v('l-service'), drawfee: v('l-drawfee'), drawcount: v('l-drawcount'), drawfactor: v('l-drawfactor'),
+      gratEq: v('p-grat-eq'), invEq: v('p-inv-eq'), gratProfit: v('p-grat-profit'), invProfit: v('p-inv-profit'),
+      debtRate: v('p-debt-rate'),
+      rent: v('d-rent'), years: v('r-years'), monthsExtra: v('r-months-extra'), appreciation: v('r-appreciation'),
+      vacancy: v('r-vacancy'), mgmt: v('r-mgmt'), maintenance: v('r-maintenance'), capex: v('r-capex'),
+    },
+    // Summary numbers
+    totalCost: d.totalCost, arv: d.arv,
+    netProfit: d.netAfterExp,
+  };
+
+  const saved = JSON.parse(localStorage.getItem('grat-deals') || '[]');
+  // Check if updating existing
+  const existingIdx = saved.findIndex(s => s.crm && s.crm === deal.crm && s.crm !== '');
+  if (existingIdx >= 0) {
+    saved[existingIdx] = {...saved[existingIdx], ...deal};
+  } else {
+    saved.push(deal);
+  }
+  localStorage.setItem('grat-deals', JSON.stringify(saved));
+
+  const btn = $('save-btn');
+  btn.textContent = '✅ נשמר בהצלחה!';
+  btn.classList.add('save-success');
+  setTimeout(() => { btn.textContent = '💾 שמור עסקה'; btn.classList.remove('save-success'); }, 2000);
+  isDirty = false;
+}
+
+function loadDeal(id) {
+  const saved = JSON.parse(localStorage.getItem('grat-deals') || '[]');
+  const deal = saved.find(d => d.id === id);
+  if (!deal) return;
+  const inp = deal.inputs;
+
+  // Fill all fields
+  $('prop-address').value = deal.address;
+  $('prop-crm').value = deal.crm || '';
+  $('prop-status').value = deal.status;
+  $('d-purchase').value = inp.purchase; $('d-reno').value = inp.reno;
+  $('d-arv').value = inp.arv; $('d-months').value = inp.months;
+  $('d-commission').value = inp.commission; $('d-title').value = inp.title;
+  $('d-legal').value = inp.legal; if($('d-llc')) $('d-llc').value = inp.llc||0; $('d-contingency').value = inp.contingency;
+  $('d-tax').value = inp.tax; $('d-insurance').value = inp.insurance;
+  $('p-grat-eq').value = inp.gratEq; $('p-inv-eq').value = inp.invEq;
+  $('p-grat-profit').value = inp.gratProfit; $('p-inv-profit').value = inp.invProfit;
+  $('p-debt-rate').value = inp.debtRate;
+  $('d-rent').value = inp.rent; $('r-years').value = inp.years;
+  $('r-months-extra').value = inp.monthsExtra; $('r-appreciation').value = inp.appreciation;
+  $('r-vacancy').value = inp.vacancy; $('r-mgmt').value = inp.mgmt;
+  $('r-maintenance').value = inp.maintenance; $('r-capex').value = inp.capex;
+
+  $('l-ltc').value = inp.ltc||85; if($('l-rehab-ltc')) $('l-rehab-ltc').value = inp.rehabLtc||100;
+  setLender(inp.lender || 'kiavi');
+  if($('l-rehab-ltc')) $('l-rehab-ltc').value = inp.rehabLtc||100; // restore after setLender override
+  syncEq(); syncProfit('grat');
+  // Restore notes
+  $('notes-input').value = deal.notesInput || '';
+  $('notes-flip').value = deal.notesFlip || '';
+  $('notes-rental').value = deal.notesRental || '';
+
+  // Switch to input tab
+  document.querySelectorAll('.mtab').forEach((b,i) => b.classList.toggle('on', i===0));
+  ['input','flip','rental','saved'].forEach(id => $('tab-'+id).style.display = id==='input'?'':'none');
+  calcAll();
+  isDirty = false;
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function deleteDeal(id) {
+  if (!confirm('למחוק את העסקה?')) return;
+  const saved = JSON.parse(localStorage.getItem('grat-deals') || '[]');
+  localStorage.setItem('grat-deals', JSON.stringify(saved.filter(d => d.id !== id)));
+  renderSaved();
+}
+
+function renderSaved() {
+  const saved = JSON.parse(localStorage.getItem('grat-deals') || '[]');
+  const filtered = savedFilter === 'all' ? saved : saved.filter(d => d.status === savedFilter);
+
+  if (filtered.length === 0) {
+    $('saved-list').innerHTML = `<div class="empty-state">אין עסקאות שמורות בקטגוריה זו</div>`;
+    return;
+  }
+
+  const icons = {flip:'🏠', rental:'🏡', brrrr:'🔄'};
+  $('saved-list').innerHTML = filtered.map(deal => {
+    const profit = deal.netProfit || 0;
+    const statusLabel = deal.status==='purchased' ? 'נרכש' : 'ניתוח לפני הצעה';
+    return `<div class="deal-card">
+      <div class="deal-badge ${deal.dealType||'flip'}">${icons[deal.dealType||'flip']}</div>
+      <div class="deal-info">
+        <div class="deal-addr">${deal.address}</div>
+        <div class="deal-meta">
+          <span class="status-badge ${deal.status}">${statusLabel}</span>
+          &nbsp;${deal.date}
+          ${deal.withInvestor ? ' · 👥 עם משקיע' : ' · 🏢 GRAT בלבד'}
+        </div>
+        ${deal.crm ? `<div class="deal-crm">CRM: ${deal.crm}</div>` : ''}
+        ${deal.notesInput ? `<div style="font-size:10px;color:var(--text-hint);margin-top:3px;font-style:italic">📝 ${deal.notesInput.substring(0,60)}${deal.notesInput.length>60?'...':''}</div>` : ''}
+      </div>
+      <div class="deal-numbers">
+        <div class="deal-profit ${profit>=0?'val-green':'val-red'}">${fmtS(profit)}</div>
+        <div class="deal-roe">ARV: ${fmt(deal.arv||0)}</div>
+      </div>
+      <div class="deal-actions">
+        <button class="deal-btn" onclick="loadDeal(${deal.id})">✏️ טען</button>
+        <button class="deal-btn danger" onclick="deleteDeal(${deal.id})">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── INIT ───
+$('p-eq-total').value = 100;
+$('p-profit-total').value = 100;
+renderExtraExpenses();
+setLender('kiavi');
+calcAll();</script>
+</body>
+</html>
