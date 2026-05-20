@@ -711,6 +711,11 @@ input:checked+.tslider:before{transform:translateX(18px)}
         <button class="saved-tab" onclick="setSavedFilter('analysis',this)">ניתוח לפני הצעה</button>
         <button class="saved-tab" onclick="setSavedFilter('purchased',this)">נרכש ✅</button>
       </div>
+      <div class="export-import-bar">
+        <span class="import-ok-msg" id="import-ok-msg"></span>
+        <button class="btn-import-deal" onclick="importDealsFromFile()" title="ייבוא עסקאות מקובץ JSON">📂 ייבוא JSON</button>
+        <button class="btn-export-deal" onclick="exportDealsToFile()" title="ייצוא עסקאות לקובץ JSON">💾 ייצוא JSON</button>
+      </div>
     </div>
     <div id="saved-list"></div>
   </div>
@@ -738,12 +743,7 @@ let savedFilter = 'all';
 let isDirty = false;
 let mgmtMode = 'profit';
 let contMode = 'dollar'; // contingency mode
-let extraEx
-      <div class="export-import-bar">
-        <span class="import-ok-msg" id="import-ok-msg"></span>
-        <button class="btn-import-deal" onclick="importDealsFromFile()" title="ייבוא עסקאות מקובץ JSON">📂 ייבוא JSON</button>
-        <button class="btn-export-deal" onclick="exportDealsToFile()" title="ייצוא עסקאות לקובץ JSON">💾 ייצוא JSON</button>
-      </div>penses = []; // [{desc, amt}]
+let extraExpenses = []; // [{desc, amt}]
 
 const LENDERS = {
   kiavi:  {ltc:90, rehabLtc:100, rate:8.95, orig:1.25, service:999,  drawfee:200, drawcount:4, drawfactor:50},
