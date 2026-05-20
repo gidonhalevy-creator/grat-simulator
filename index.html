@@ -286,6 +286,14 @@ input:checked+.tslider:before{transform:translateX(18px)}
 .notes-label{font-size:11px;font-weight:700;color:var(--navy);margin-bottom:6px}
 .notes-textarea{width:100%;padding:8px 10px;font-size:12px;border:1px solid var(--border-strong);border-radius:var(--radius);font-family:inherit;color:var(--text);background:#FAFAF8;resize:vertical;min-height:70px;line-height:1.5;transition:border-color .15s;direction:rtl}
 .notes-textarea:focus{outline:none;border-color:var(--gold)}
+
+/* EXPORT/IMPORT BAR */
+.export-import-bar{display:flex;gap:8px;align-items:center;margin-top:10px}
+.btn-export-deal{background:var(--navy);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:opacity 0.2s}
+.btn-export-deal:hover{opacity:0.85}
+.btn-import-deal{background:var(--surface);color:var(--navy);border:2px solid var(--navy);border-radius:8px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:background 0.2s}
+.btn-import-deal:hover{background:var(--surface2)}
+.import-ok-msg{color:var(--green);font-size:12px;font-weight:600;display:none}
 </style>
 </head>
 <body>
@@ -730,7 +738,12 @@ let savedFilter = 'all';
 let isDirty = false;
 let mgmtMode = 'profit';
 let contMode = 'dollar'; // contingency mode
-let extraExpenses = []; // [{desc, amt}]
+let extraEx
+      <div class="export-import-bar">
+        <span class="import-ok-msg" id="import-ok-msg"></span>
+        <button class="btn-import-deal" onclick="importDealsFromFile()" title="ייבוא עסקאות מקובץ JSON">📂 ייבוא JSON</button>
+        <button class="btn-export-deal" onclick="exportDealsToFile()" title="ייצוא עסקאות לקובץ JSON">💾 ייצוא JSON</button>
+      </div>penses = []; // [{desc, amt}]
 
 const LENDERS = {
   kiavi:  {ltc:90, rehabLtc:100, rate:8.95, orig:1.25, service:999,  drawfee:200, drawcount:4, drawfactor:50},
@@ -1642,6 +1655,46 @@ $('p-eq-total').value = 100;
 $('p-profit-total').value = 100;
 renderExtraExpenses();
 setLender('kiavi');
-calcAll();</script>
+calcAll();
+
+// ─── EXPORT / IMPORT ───────────────────────────────────
+function exportDealsToFile(){
+  const deals=JSON.parse(localStorage.getItem('grat-deals')||'[]');
+  if(!deals.length){alert('אין עסקאות שמורות לייצוא.');return;}
+  const blob=new Blob([JSON.stringify(deals,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const d=new Date().toISOString().split('T')[0];
+  a.href=url;a.download='grat-deals-'+d+'.json';
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+function importDealsFromFile(){
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='.json,application/json';
+  inp.onchange=function(e){
+    const file=e.target.files[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=function(ev){
+      try{
+        const imported=JSON.parse(ev.target.result);
+        if(!Array.isArray(imported)){alert('קובץ לא תקין — חייב להיות מערך עסקאות.');return;}
+        const existing=JSON.parse(localStorage.getItem('grat-deals')||'[]');
+        const ids=new Set(existing.map(d=>d.id));
+        const newDeals=imported.filter(d=>!ids.has(d.id));
+        localStorage.setItem('grat-deals',JSON.stringify([...existing,...newDeals]));
+        const msg=document.getElementById('import-ok-msg');
+        msg.textContent='✅ יובאו '+newDeals.length+' עסקאות!';
+        msg.style.display='inline';
+        setTimeout(()=>{msg.style.display='none';},3000);
+        renderSaved();
+      }catch(err){alert('שגיאה: '+err.message);}
+    };
+    reader.readAsText(file);
+  };
+  inp.click();
+}
+// ───────────────────────────────────────────────────────
+</script>
 </body>
 </html>
