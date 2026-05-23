@@ -935,7 +935,7 @@ function getDealData() {
   const loanPurchase = purchase * ltcPct;                    // הלוואת רכישה
   const loanRehab = reno * rehabLtcPct;                      // הלוואת שיפוץ (holdback)
   const totalLoan = loanPurchase + loanRehab;                // סה"כ הלוואה
-  const origFee = loanPurchase * origPct;                    // origination על הלוואת רכישה בלבד
+  const origFee = totalLoan * origPct;                       // origination על כל ההלוואה (רכישה + שיפוץ)
   const interestPurchase = loanPurchase * annRate * (months/12);
   const rehabInterest = loanRehab * drawFactor * annRate * (months/12); // ריבית על חלק שנמשך
   const drawCosts = drawFee * drawCount;
